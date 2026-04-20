@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityCare – Manage Complaints</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+<style>
+:root{
+  --cc-dark:#0d1f13;--cc-green:#1a4d2e;--cc-mid:#2d6a4f;
+  --cc-accent:#52b788;--cc-light:#d8f3dc;--cc-white:#f8fdf9;
+  --cc-text:#1b2d23;--cc-muted:#5a7a65;--cc-border:#d0e8d8;
+  --font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:#f0f6f2;color:var(--cc-text);}
+.admin-layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+.cc-sidebar{background:var(--cc-dark);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar-brand{padding:22px 20px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;text-decoration:none;}
+.sidebar-icon{width:36px;height:36px;background:var(--cc-accent);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sidebar-icon i{color:var(--cc-dark);font-size:16px;}
+.sidebar-title{font-family:var(--font-display);font-size:18px;font-weight:700;color:#fff;}
+.sidebar-title span{color:var(--cc-accent);}
+.sidebar-label{font-size:10px;font-weight:600;letter-spacing:1.2px;color:rgba(255,255,255,0.3);text-transform:uppercase;padding:18px 20px 6px;}
+.sidebar-nav{padding:0 10px;flex:1;}
+.sidebar-link{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:rgba(255,255,255,0.65);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:2px;transition:all 0.2s;}
+.sidebar-link i{font-size:14px;width:18px;text-align:center;}
+.sidebar-link:hover{background:rgba(255,255,255,0.07);color:#fff;}
+.sidebar-link.active{background:var(--cc-accent);color:var(--cc-dark);}
+.sidebar-logout{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.07);}
+.sidebar-logout a{display:flex;align-items:center;gap:10px;color:#ff8a80;font-size:14px;text-decoration:none;font-weight:500;padding:10px 14px;border-radius:10px;transition:background 0.2s;}
+.sidebar-logout a:hover{background:rgba(255,100,80,0.1);}
+
+.cc-main{overflow-x:hidden;}
+.cc-topbar{background:#fff;border-bottom:1px solid var(--cc-border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-title{font-family:var(--font-display);font-size:20px;font-weight:700;}
+.topbar-badge{background:var(--cc-dark);color:var(--cc-accent);font-size:11px;font-weight:700;padding:5px 12px;border-radius:50px;}
+.cc-content{padding:28px;}
+
+/* FILTER BAR */
+.filter-bar{background:#fff;border:1px solid var(--cc-border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.filter-bar label{font-size:12px;font-weight:600;color:var(--cc-muted);text-transform:uppercase;letter-spacing:0.5px;}
+.filter-bar select,.filter-bar input{border:1.5px solid var(--cc-border);border-radius:8px;padding:7px 12px;font-size:13px;font-family:var(--font-body);color:var(--cc-text);background:var(--cc-white);}
+.filter-bar select:focus,.filter-bar input:focus{outline:none;border-color:var(--cc-accent);}
+
+.table-card{background:#fff;border:1px solid var(--cc-border);border-radius:14px;overflow:hidden;}
+.table-header{padding:18px 20px;border-bottom:1px solid var(--cc-border);display:flex;align-items:center;justify-content:space-between;}
+.table-header h4{font-family:var(--font-display);font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.table-header h4 i{color:var(--cc-accent);}
+.cc-table{width:100%;border-collapse:collapse;}
+.cc-table thead{background:#f7fcf9;}
+.cc-table thead th{padding:11px 14px;font-size:11px;font-weight:700;color:var(--cc-muted);text-transform:uppercase;letter-spacing:0.7px;text-align:left;border-bottom:1px solid var(--cc-border);}
+.cc-table tbody tr{border-bottom:1px solid #f0f6f2;transition:background 0.15s;}
+.cc-table tbody tr:last-child{border-bottom:none;}
+.cc-table tbody tr:hover{background:#f7fcf9;}
+.cc-table td{padding:12px 14px;font-size:13px;vertical-align:middle;}
+
+.sev-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:50px;font-size:11px;font-weight:700;}
+.sev-badge::before{content:'';width:6px;height:6px;border-radius:50%;}
+.sev-critical{background:#fdecea;color:#c0392b;} .sev-critical::before{background:#e74c3c;}
+.sev-high{background:#fef0e0;color:#a04010;} .sev-high::before{background:#e67e22;}
+.sev-medium{background:#fef9e7;color:#9a6000;} .sev-medium::before{background:#f39c12;}
+.sev-low{background:#e8faf0;color:#1a7a40;} .sev-low::before{background:#2ecc71;}
+.status-badge{padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;}
+.status-pending{background:#fff3e0;color:#e67e22;}
+.status-resolved{background:#e8faf0;color:#1a7a40;}
+.status-verified,.status-verfied{background:#e3f0ff;color:#1a6ebf;}
+.status-processing{background:#f3e8ff;color:#6b30b5;}
+
+.score-bar-wrap{display:flex;align-items:center;gap:7px;}
+.score-bar{height:5px;border-radius:3px;background:var(--cc-light);width:60px;}
+.score-bar-fill{height:5px;border-radius:3px;background:var(--cc-accent);}
+.score-num{font-size:12px;font-weight:700;color:var(--cc-green);}
+
+.act-btn{padding:5px 11px;border-radius:7px;font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.act-manage{background:var(--cc-light);color:var(--cc-green);}
+.act-manage:hover{background:var(--cc-green);color:#fff;}
+.act-assign{background:#e3f0ff;color:#1a6ebf;}
+.act-assign:hover{background:#1a6ebf;color:#fff;}
+
+.cc-alert{padding:13px 18px;border-radius:10px;font-size:14px;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.cc-alert-success{background:#eafaf1;border:1px solid #a9dfbf;color:#1e8449;}
+
+.empty-state{padding:60px;text-align:center;color:var(--cc-muted);}
+.empty-state i{font-size:40px;opacity:0.3;display:block;margin-bottom:12px;}
+
+@media(max-width:900px){
+  .admin-layout{grid-template-columns:1fr;}
+  .cc-sidebar{display:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="admin-layout">
+
+  <aside class="cc-sidebar">
+    <a class="sidebar-brand" href="/adminhome">
+      <div class="sidebar-icon"><i class="fas fa-recycle"></i></div>
+      <span class="sidebar-title">CITY<span>CARE</span></span>
+    </a>
+    <p class="sidebar-label">Operations</p>
+    <nav class="sidebar-nav">
+      <a class="sidebar-link" href="/adminhome"><i class="fas fa-th-large"></i> Dashboard</a>
+      <a class="sidebar-link active" href="/view_complaints"><i class="fas fa-list-ul"></i> All Complaints</a>
+      <a class="sidebar-link" href="/add_questions"><i class="fas fa-brain"></i> Knowledge Base</a>
+      <a class="sidebar-link" href="/admin_feedback"><i class="fas fa-star"></i> Feedback</a>
+    </nav>
+    <div class="sidebar-logout">
+      <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <div class="cc-main">
+    <header class="cc-topbar">
+      <span class="topbar-title">All Complaints</span>
+      <span class="topbar-badge"><i class="fas fa-sort-amount-down" style="font-size:10px;margin-right:5px;"></i>Priority Sorted</span>
+    </header>
+
+    <div class="cc-content">
+
+      {% if msg %}
+      <div class="cc-alert cc-alert-success"><i class="fas fa-check-circle"></i> {{ msg }}</div>
+      {% endif %}
+
+      <!-- FILTER BAR -->
+      <div class="filter-bar">
+        <label>Filter:</label>
+        <select id="filterStatus" onchange="filterTable()">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="verified">Verified</option>
+          <option value="processing">Processing</option>
+          <option value="resolved">Resolved</option>
+        </select>
+        <select id="filterSeverity" onchange="filterTable()">
+          <option value="">All Severities</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <input type="text" id="filterSearch" onkeyup="filterTable()" placeholder="Search name, area...">
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <h4><i class="fas fa-sort-amount-down"></i> Complaints — sorted by priority score</h4>
+          <span style="font-size:12px;color:var(--cc-muted);">{{ rawdata|length }} total</span>
+        </div>
+        {% if rawdata %}
+        <div style="overflow-x:auto;">
+          <table class="cc-table" id="complaintTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>User</th>
+                <th>Category</th>
+                <th>Location</th>
+                <th>Severity</th>
+                <th>Priority</th>
+                <th>Assigned Staff</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in rawdata %}
+              {# 0=id,1=name,2=userid,3=phone,4=category,5=location,
+                 6=address,7=image,8=status,9=severity,10=priority_score,
+                 11=assigned_staff,12=created_at #}
+              <tr data-status="{{ row[8].lower() if row[8] else '' }}"
+                  data-sev="{{ row[9].lower() if row[9] else 'medium' }}"
+                  data-search="{{ (row[1]~row[5]~row[4]).lower() }}">
+                <td><b>#{{ row[0] }}</b></td>
+                <td>
+                  <div style="font-weight:600;">{{ row[1] }}</div>
+                  <div style="font-size:11px;color:var(--cc-muted);">{{ row[2] }}</div>
+                </td>
+                <td>{{ row[4] }}</td>
+                <td><i class="fas fa-map-marker-alt" style="color:var(--cc-accent);font-size:10px;margin-right:3px;"></i>{{ row[5] }}</td>
+                <td>
+                  {% set sev = row[9] if row[9] else 'Medium' %}
+                  <span class="sev-badge sev-{{ sev.lower() }}">{{ sev }}</span>
+                </td>
+                <td>
+                  <div class="score-bar-wrap">
+                    <div class="score-bar">
+                      <div class="score-bar-fill" style="width:{{ [((row[10] or 0)/20*100)|int,100]|min }}%;"></div>
+                    </div>
+                    <span class="score-num">{{ row[10] or 0 }}</span>
+                  </div>
+                </td>
+                <td>
+                  {% if row[11] %}
+                  <span style="font-size:12px;"><i class="fas fa-user" style="color:var(--cc-muted);font-size:10px;margin-right:3px;"></i>{{ row[11] }}</span>
+                  {% else %}
+                  <span style="color:var(--cc-muted);font-size:12px;">Unassigned</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% set st = row[8].lower() if row[8] else 'pending' %}
+                  <span class="status-badge status-{{ st }}">{{ row[8] | capitalize }}</span>
+                </td>
+                <td style="font-size:11px;color:var(--cc-muted);">
+                  {{ row[12].strftime('%d %b %Y') if row[12] else '—' }}
+                </td>
+                <td>
+                  <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                    <a href="/update_status/{{ row[0] }}" class="act-btn act-manage">
+                      <i class="fas fa-edit"></i> Manage
+                    </a>
+                    {% if not row[11] %}
+                    <a href="/auto_assign/{{ row[0] }}" class="act-btn act-assign"
+                       title="Auto-assign best available staff">
+                      <i class="fas fa-user-plus"></i> Assign
+                    </a>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <i class="fas fa-clipboard-list"></i>
+          <p>No complaints found.</p>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function filterTable() {
+  const status   = document.getElementById('filterStatus').value.toLowerCase();
+  const severity = document.getElementById('filterSeverity').value.toLowerCase();
+  const search   = document.getElementById('filterSearch').value.toLowerCase();
+  document.querySelectorAll('#complaintTable tbody tr').forEach(row => {
+    const matchStatus   = !status   || row.dataset.status.includes(status);
+    const matchSeverity = !severity || row.dataset.sev.includes(severity);
+    const matchSearch   = !search   || row.dataset.search.includes(search);
+    row.style.display = (matchStatus && matchSeverity && matchSearch) ? '' : 'none';
+  });
+}
+</script>
+
+<script src="{{ url_for('static',filename='assets/js/jquery-3.2.1.min.js')}}"></script>
+<script src="{{ url_for('static',filename='assets/js/bootstrap.min.js')}}"></script>
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityCare – Admin Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --cc-dark:#0d1f13;--cc-green:#1a4d2e;--cc-mid:#2d6a4f;
+  --cc-accent:#52b788;--cc-light:#d8f3dc;--cc-white:#f8fdf9;
+  --cc-text:#1b2d23;--cc-muted:#5a7a65;--cc-border:#d0e8d8;
+  --font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:#f0f6f2;color:var(--cc-text);}
+
+/* LAYOUT */
+.admin-layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+
+/* SIDEBAR */
+.cc-sidebar{background:var(--cc-dark);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar-brand{padding:22px 20px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;text-decoration:none;}
+.sidebar-icon{width:36px;height:36px;background:var(--cc-accent);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sidebar-icon i{color:var(--cc-dark);font-size:16px;}
+.sidebar-title{font-family:var(--font-display);font-size:18px;font-weight:700;color:#fff;}
+.sidebar-title span{color:var(--cc-accent);}
+.sidebar-label{font-size:10px;font-weight:600;letter-spacing:1.2px;color:rgba(255,255,255,0.3);text-transform:uppercase;padding:18px 20px 6px;}
+.sidebar-nav{padding:0 10px;flex:1;}
+.sidebar-link{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:rgba(255,255,255,0.65);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:2px;transition:all 0.2s;}
+.sidebar-link i{font-size:14px;width:18px;text-align:center;}
+.sidebar-link:hover{background:rgba(255,255,255,0.07);color:#fff;}
+.sidebar-link.active{background:var(--cc-accent);color:var(--cc-dark);}
+.sidebar-logout{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.07);}
+.sidebar-logout a{display:flex;align-items:center;gap:10px;color:#ff8a80;font-size:14px;text-decoration:none;font-weight:500;padding:10px 14px;border-radius:10px;transition:background 0.2s;}
+.sidebar-logout a:hover{background:rgba(255,100,80,0.1);}
+
+/* MAIN */
+.cc-main{overflow-x:hidden;}
+.cc-topbar{background:#fff;border-bottom:1px solid var(--cc-border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-title{font-family:var(--font-display);font-size:20px;font-weight:700;}
+.topbar-badge{background:var(--cc-dark);color:var(--cc-accent);font-size:11px;font-weight:700;padding:5px 12px;border-radius:50px;letter-spacing:0.5px;}
+.cc-content{padding:28px;}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:24px;}
+.stat-card{background:#fff;border:1px solid var(--cc-border);border-radius:14px;padding:18px;position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;right:-15px;top:-15px;width:70px;height:70px;border-radius:50%;}
+.stat-total::after{background:rgba(82,183,136,0.1);}
+.stat-pending::after{background:rgba(230,126,34,0.1);}
+.stat-resolved::after{background:rgba(26,77,46,0.1);}
+.stat-critical::after{background:rgba(231,76,60,0.1);}
+.stat-verified::after{background:rgba(26,110,191,0.1);}
+.stat-avg::after{background:rgba(91,48,181,0.1);}
+.stat-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:16px;}
+.stat-total .stat-icon{background:#e8faf5;color:var(--cc-accent);}
+.stat-pending .stat-icon{background:#fef0e0;color:#e67e22;}
+.stat-resolved .stat-icon{background:#e8faf0;color:var(--cc-green);}
+.stat-critical .stat-icon{background:#fdecea;color:#e74c3c;}
+.stat-verified .stat-icon{background:#e3f0ff;color:#1a6ebf;}
+.stat-avg .stat-icon{background:#f3e8ff;color:#6b30b5;}
+.stat-label{font-size:11px;font-weight:600;color:var(--cc-muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:4px;}
+.stat-value{font-family:var(--font-display);font-size:26px;font-weight:700;line-height:1;}
+
+/* CHART SECTION */
+.charts-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px;}
+.chart-card{background:#fff;border:1px solid var(--cc-border);border-radius:14px;padding:20px;}
+.chart-title{font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.chart-title i{color:var(--cc-accent);font-size:13px;}
+
+/* TWO COLUMN */
+.two-col{display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:24px;}
+
+/* TABLE */
+.table-card{background:#fff;border:1px solid var(--cc-border);border-radius:14px;overflow:hidden;}
+.table-header{padding:18px 20px;border-bottom:1px solid var(--cc-border);display:flex;align-items:center;justify-content:space-between;}
+.table-header h4{font-family:var(--font-display);font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.table-header h4 i{color:var(--cc-accent);}
+.cc-table{width:100%;border-collapse:collapse;}
+.cc-table thead{background:#f7fcf9;}
+.cc-table thead th{padding:11px 14px;font-size:11px;font-weight:700;color:var(--cc-muted);text-transform:uppercase;letter-spacing:0.7px;text-align:left;border-bottom:1px solid var(--cc-border);}
+.cc-table tbody tr{border-bottom:1px solid #f0f6f2;transition:background 0.15s;}
+.cc-table tbody tr:last-child{border-bottom:none;}
+.cc-table tbody tr:hover{background:#f7fcf9;}
+.cc-table td{padding:12px 14px;font-size:13px;vertical-align:middle;}
+
+/* Score bar */
+.score-bar-wrap{display:flex;align-items:center;gap:8px;}
+.score-bar{height:6px;border-radius:3px;background:var(--cc-light);}
+.score-bar-fill{height:6px;border-radius:3px;background:var(--cc-accent);}
+.score-num{font-size:12px;font-weight:700;color:var(--cc-green);min-width:30px;}
+
+/* Badges */
+.sev-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:50px;font-size:11px;font-weight:700;}
+.sev-badge::before{content:'';width:6px;height:6px;border-radius:50%;}
+.sev-critical{background:#fdecea;color:#c0392b;} .sev-critical::before{background:#e74c3c;}
+.sev-high{background:#fef0e0;color:#a04010;} .sev-high::before{background:#e67e22;}
+.sev-medium{background:#fef9e7;color:#9a6000;} .sev-medium::before{background:#f39c12;}
+.sev-low{background:#e8faf0;color:#1a7a40;} .sev-low::before{background:#2ecc71;}
+.status-badge{padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;}
+.status-pending{background:#fff3e0;color:#e67e22;}
+.status-resolved{background:#e8faf0;color:#1a7a40;}
+.status-verified,.status-verfied{background:#e3f0ff;color:#1a6ebf;}
+
+.act-btn{padding:5px 12px;border-radius:7px;font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.act-manage{background:var(--cc-light);color:var(--cc-green);}
+.act-manage:hover{background:var(--cc-green);color:#fff;}
+.act-assign{background:#e3f0ff;color:#1a6ebf;}
+.act-assign:hover{background:#1a6ebf;color:#fff;}
+
+/* HOTSPOT */
+.hotspot-list{padding:4px 0;}
+.hotspot-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f6f2;}
+.hotspot-row:last-child{border-bottom:none;}
+.hotspot-rank{width:22px;height:22px;border-radius:6px;background:var(--cc-light);color:var(--cc-green);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hotspot-rank.top{background:var(--cc-green);color:#fff;}
+.hotspot-name{flex:1;font-size:13px;font-weight:600;}
+.hotspot-bar-wrap{width:90px;}
+.hotspot-bar{height:5px;border-radius:3px;background:#eee;}
+.hotspot-bar-fill{height:5px;border-radius:3px;background:var(--cc-accent);}
+.hotspot-count{font-size:12px;font-weight:700;color:var(--cc-muted);min-width:20px;text-align:right;}
+
+/* STAFF */
+.staff-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f6f2;}
+.staff-row:last-child{border-bottom:none;}
+.staff-avatar{width:34px;height:34px;border-radius:10px;background:var(--cc-light);color:var(--cc-green);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.staff-info{flex:1;}
+.staff-name{font-size:13px;font-weight:600;}
+.staff-role{font-size:11px;color:var(--cc-muted);}
+.staff-load{text-align:right;}
+.load-pill{padding:2px 8px;border-radius:50px;font-size:11px;font-weight:700;}
+.load-free{background:#e8faf0;color:#1a7a40;}
+.load-busy{background:#fff3e0;color:#e67e22;}
+
+@media(max-width:1200px){
+  .stats-grid{grid-template-columns:repeat(3,1fr);}
+  .charts-row{grid-template-columns:1fr 1fr;}
+  .two-col{grid-template-columns:1fr;}
+}
+@media(max-width:900px){
+  .admin-layout{grid-template-columns:1fr;}
+  .cc-sidebar{display:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="cc-sidebar">
+    <a class="sidebar-brand" href="/adminhome">
+      <div class="sidebar-icon"><i class="fas fa-recycle"></i></div>
+      <span class="sidebar-title">CITY<span>CARE</span></span>
+    </a>
+    <p class="sidebar-label">Operations</p>
+    <nav class="sidebar-nav">
+      <a class="sidebar-link active" href="/adminhome"><i class="fas fa-th-large"></i> Dashboard</a>
+      <a class="sidebar-link" href="/view_complaints"><i class="fas fa-list-ul"></i> All Complaints</a>
+      <a class="sidebar-link" href="/add_questions"><i class="fas fa-brain"></i> Knowledge Base</a>
+      <a class="sidebar-link" href="/admin_feedback"><i class="fas fa-star"></i> Feedback</a>
+    </nav>
+    <div class="sidebar-logout">
+      <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="cc-main">
+    <header class="cc-topbar">
+      <span class="topbar-title">Operations Dashboard</span>
+      <span class="topbar-badge"><i class="fas fa-shield-alt" style="font-size:10px;margin-right:5px;"></i> Admin Panel</span>
+    </header>
+
+    <div class="cc-content">
+
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card stat-total">
+          <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+          <div class="stat-label">Total</div>
+          <div class="stat-value">{{ total }}</div>
+        </div>
+        <div class="stat-card stat-pending">
+          <div class="stat-icon"><i class="fas fa-clock"></i></div>
+          <div class="stat-label">Pending</div>
+          <div class="stat-value">{{ pending }}</div>
+        </div>
+        <div class="stat-card stat-resolved">
+          <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+          <div class="stat-label">Resolved</div>
+          <div class="stat-value">{{ resolved }}</div>
+        </div>
+        <div class="stat-card stat-critical">
+          <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="stat-label">Critical/High</div>
+          <div class="stat-value">{{ critical_count }}</div>
+        </div>
+        <div class="stat-card stat-verified">
+          <div class="stat-icon"><i class="fas fa-badge-check"></i></div>
+          <div class="stat-label">Verified</div>
+          <div class="stat-value">{{ verified }}</div>
+        </div>
+        <div class="stat-card stat-avg">
+          <div class="stat-icon"><i class="fas fa-tachometer-alt"></i></div>
+          <div class="stat-label">Avg Resolve</div>
+          <div class="stat-value" style="font-size:20px;">{{ avg_resolution }}<span style="font-size:13px;color:var(--cc-muted);font-family:var(--font-body);"> days</span></div>
+        </div>
+      </div>
+
+      <!-- CHARTS -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-title"><i class="fas fa-chart-donut"></i> By Category</div>
+          <canvas id="catChart" height="180"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title"><i class="fas fa-chart-bar"></i> By Severity</div>
+          <canvas id="sevChart" height="180"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title"><i class="fas fa-chart-line"></i> Trend (7 days)</div>
+          <canvas id="trendChart" height="180"></canvas>
+        </div>
+      </div>
+
+      <!-- COMPLAINTS TABLE + SIDEBAR -->
+      <div class="two-col">
+
+        <!-- PRIORITY TABLE -->
+        <div class="table-card">
+          <div class="table-header">
+            <h4><i class="fas fa-sort-amount-down"></i> Complaints by Priority</h4>
+            <a href="/view_complaints" style="font-size:13px;color:var(--cc-green);text-decoration:none;font-weight:600;">View all &rarr;</a>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="cc-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>User</th>
+                  <th>Category</th>
+                  <th>Area</th>
+                  <th>Severity</th>
+                  <th>Priority Score</th>
+                  <th>Assigned</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for c in complaints[:10] %}
+                {# c: 0=id, 1=user_name, 2=category, 3=location, 4=status,
+                        5=severity, 6=priority_score, 7=assigned_staff, 8=created_at #}
+                <tr>
+                  <td><b>#{{ c[0] }}</b></td>
+                  <td>{{ c[1] }}</td>
+                  <td>{{ c[2] }}</td>
+                  <td><i class="fas fa-map-marker-alt" style="color:var(--cc-accent);font-size:10px;margin-right:3px;"></i>{{ c[3] }}</td>
+                  <td>
+                    {% set sev = c[5] if c[5] else 'Medium' %}
+                    <span class="sev-badge sev-{{ sev.lower() }}">{{ sev }}</span>
+                  </td>
+                  <td>
+                    <div class="score-bar-wrap">
+                      <div class="score-bar" style="width:70px;">
+                        <div class="score-bar-fill" style="width:{{ [((c[6] or 0)/20*100)|int, 100]|min }}%;"></div>
+                      </div>
+                      <span class="score-num">{{ c[6] or 0 }}</span>
+                    </div>
+                  </td>
+                  <td style="font-size:12px;">
+                    {% if c[7] %}{{ c[7] }}
+                    {% else %}<span style="color:var(--cc-muted);">—</span>{% endif %}
+                  </td>
+                  <td>
+                    {% set st = c[4].lower() if c[4] else 'pending' %}
+                    <span class="status-badge status-{{ st }}">{{ c[4] | capitalize }}</span>
+                  </td>
+                  <td>
+                    <div style="display:flex;gap:5px;">
+                      <a href="/update_status/{{ c[0] }}" class="act-btn act-manage">
+                        <i class="fas fa-edit"></i> Manage
+                      </a>
+                      {% if not c[7] %}
+                      <a href="/auto_assign/{{ c[0] }}" class="act-btn act-assign">
+                        <i class="fas fa-user-plus"></i>
+                      </a>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+
+          <!-- HOTSPOTS -->
+          <div class="table-card">
+            <div class="table-header">
+              <h4><i class="fas fa-fire"></i> Hotspot Areas</h4>
+            </div>
+            <div style="padding:4px 16px 12px;">
+              {% set max_count = hotspots[0][1] if hotspots else 1 %}
+              {% for h in hotspots %}
+              <div class="hotspot-row">
+                <span class="hotspot-rank {% if loop.index0 == 0 %}top{% endif %}">{{ loop.index }}</span>
+                <span class="hotspot-name">{{ h[0] }}</span>
+                <div class="hotspot-bar-wrap">
+                  <div class="hotspot-bar">
+                    <div class="hotspot-bar-fill" style="width:{{ (h[1]/max_count*100)|int }}%;"></div>
+                  </div>
+                </div>
+                <span class="hotspot-count">{{ h[1] }}</span>
+              </div>
+              {% endfor %}
+              {% if not hotspots %}
+              <p style="text-align:center;color:var(--cc-muted);font-size:13px;padding:20px 0;">No data yet.</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- STAFF -->
+          <div class="table-card">
+            <div class="table-header">
+              <h4><i class="fas fa-users"></i> Staff Status</h4>
+            </div>
+            <div style="padding:4px 16px 12px;">
+              {% for s in staff_list %}
+              <div class="staff-row">
+                <div class="staff-avatar">{{ s[1][:2].upper() }}</div>
+                <div class="staff-info">
+                  <div class="staff-name">{{ s[1] }}</div>
+                  <div class="staff-role">{{ s[2] }}</div>
+                </div>
+                <div class="staff-load">
+                  <span class="load-pill {% if s[3] %}load-free{% else %}load-busy{% endif %}">
+                    {{ s[4] }} tasks
+                  </span>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /cc-content -->
+  </div><!-- /cc-main -->
+</div><!-- /admin-layout -->
+
+<script>
+// ── Chart data from Jinja ────────────────────────────────────────
+const catData = {{ cat_data | tojson }};
+const sevData = {{ [('Critical',0),('High',0),('Medium',0),('Low',0)] | tojson }};
+
+// Build actual sev counts from complaints
+const sevCounts = {Critical:0, High:0, Medium:0, Low:0};
+{% for c in complaints %}
+  const s_{{ loop.index }} = "{{ c[5] if c[5] else 'Medium' }}";
+  if(sevCounts[s_{{ loop.index }}] !== undefined) sevCounts[s_{{ loop.index }}]++;
+{% endfor %}
+
+const trendDates  = {{ complaints | map(attribute=8) | list | tojson | safe if complaints else '[]' }};
+
+// ── Colour palette ───────────────────────────────────────────────
+const palette = ['#52b788','#1a4d2e','#2d6a4f','#95d5b2','#74c69d','#40916c'];
+const sevColors = ['#e74c3c','#e67e22','#f39c12','#2ecc71'];
+
+// ── Category donut ───────────────────────────────────────────────
+new Chart(document.getElementById('catChart'), {
+  type: 'doughnut',
+  data: {
+    labels: catData.map(r => r[0]),
+    datasets:[{
+      data: catData.map(r => r[1]),
+      backgroundColor: palette,
+      borderWidth: 0,
+      hoverOffset: 6
+    }]
+  },
+  options:{
+    plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, boxWidth:10 }}},
+    cutout:'65%'
+  }
+});
+
+// ── Severity bar ─────────────────────────────────────────────────
+new Chart(document.getElementById('sevChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Critical','High','Medium','Low'],
+    datasets:[{
+      data: [sevCounts.Critical, sevCounts.High, sevCounts.Medium, sevCounts.Low],
+      backgroundColor: sevColors,
+      borderRadius: 6,
+      borderWidth: 0
+    }]
+  },
+  options:{
+    plugins:{ legend:{ display:false }},
+    scales:{
+      y:{ grid:{ color:'#f0f6f2' }, ticks:{ stepSize:1 }},
+      x:{ grid:{ display:false }}
+    }
+  }
+});
+
+// ── 7-day trend (complaint_id as proxy — simplest with server data) ─
+// Build from complaints grouped by date
+const trendMap = {};
+{% for c in complaints %}
+  {% if c[8] %}
+  const d_{{ loop.index }} = "{{ c[8].strftime('%d %b') if c[8] else '' }}";
+  if(d_{{ loop.index }}) trendMap[d_{{ loop.index }}] = (trendMap[d_{{ loop.index }}] || 0) + 1;
+  {% endif %}
+{% endfor %}
+const trendLabels = Object.keys(trendMap).slice(-7);
+const trendVals   = trendLabels.map(k => trendMap[k]);
+
+new Chart(document.getElementById('trendChart'), {
+  type: 'line',
+  data: {
+    labels: trendLabels.length ? trendLabels : ['No data'],
+    datasets:[{
+      data: trendVals.length ? trendVals : [0],
+      borderColor: '#52b788',
+      backgroundColor: 'rgba(82,183,136,0.08)',
+      borderWidth: 2,
+      pointRadius: 4,
+      pointBackgroundColor: '#52b788',
+      tension: 0.4,
+      fill: true
+    }]
+  },
+  options:{
+    plugins:{ legend:{ display:false }},
+    scales:{
+      y:{ grid:{ color:'#f0f6f2' }, ticks:{ stepSize:1 }},
+      x:{ grid:{ display:false }, ticks:{ font:{size:10}}}
+    }
+  }
+});
+</script>
+
+</body>
+</html>

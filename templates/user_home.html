@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityCare – Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+<style>
+:root{
+  --dark:#0d1f13; --green:#1a4d2e; --mid:#2d6a4f;
+  --accent:#52b788; --light:#d8f3dc; --white:#f8fdf9;
+  --text:#1b2d23; --muted:#5a7a65; --border:#d0e8d8;
+  --font-h:'Syne',sans-serif; --font-b:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-b);background:#f0f6f2;color:var(--text);}
+
+/* LAYOUT */
+.dashboard-layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+
+/* SIDEBAR */
+.cc-sidebar{background:var(--dark);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar-brand{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;text-decoration:none;}
+.sidebar-brand-icon{width:36px;height:36px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sidebar-brand-icon i{color:var(--dark);font-size:16px;}
+.sidebar-brand-name{font-family:var(--font-h);font-size:18px;font-weight:700;color:#fff;}
+.sidebar-brand-name span{color:var(--accent);}
+.sidebar-section-label{font-size:10px;font-weight:700;letter-spacing:1.2px;color:rgba(255,255,255,0.3);text-transform:uppercase;padding:20px 20px 8px;}
+.sidebar-nav{padding:0 10px;flex:1;}
+.sidebar-link{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:rgba(255,255,255,0.65);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:2px;transition:all 0.2s;}
+.sidebar-link i{font-size:14px;width:18px;text-align:center;}
+.sidebar-link:hover{background:rgba(255,255,255,0.07);color:#fff;}
+.sidebar-link.active{background:var(--accent);color:var(--dark);}
+.sidebar-link.active i{color:var(--dark);}
+.sidebar-logout{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.07);}
+.sidebar-logout a{display:flex;align-items:center;gap:10px;color:#ff8a80;font-size:14px;text-decoration:none;font-weight:500;padding:10px 14px;border-radius:10px;transition:background 0.2s;}
+.sidebar-logout a:hover{background:rgba(255,100,80,0.1);}
+
+/* MAIN */
+.cc-main{overflow-x:hidden;}
+.cc-topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-title{font-family:var(--font-h);font-size:20px;font-weight:700;}
+.topbar-pill{background:var(--light);color:var(--green);font-size:12px;font-weight:600;padding:5px 13px;border-radius:50px;display:flex;align-items:center;gap:6px;}
+.topbar-pill::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--accent);}
+.cc-content{padding:32px;}
+
+/* WELCOME BANNER */
+.welcome-banner{
+  background:linear-gradient(135deg,var(--green) 0%,var(--mid) 100%);
+  border-radius:20px; padding:36px 40px;
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:28px; position:relative; overflow:hidden;
+}
+.welcome-banner::before{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.06);}
+.welcome-banner::after{content:'';position:absolute;right:60px;bottom:-60px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,0.04);}
+.welcome-text{position:relative;z-index:1;}
+.welcome-text h2{font-family:var(--font-h);font-size:26px;font-weight:700;color:#fff;margin-bottom:8px;}
+.welcome-text p{color:rgba(255,255,255,0.7);font-size:14px;margin:0;}
+.welcome-actions{display:flex;gap:12px;position:relative;z-index:1;}
+.btn-white{background:#fff;color:var(--green);border:none;padding:11px 22px;border-radius:50px;font-family:var(--font-b);font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;}
+.btn-white:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,0.15);color:var(--green);}
+.btn-ghost-white{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:10px 22px;border-radius:50px;font-family:var(--font-b);font-size:14px;font-weight:500;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s;}
+.btn-ghost-white:hover{background:rgba(255,255,255,0.25);color:#fff;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:28px;}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:22px;position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.09);}
+.stat-card::after{content:'';position:absolute;right:-18px;top:-18px;width:90px;height:90px;border-radius:50%;}
+.stat-total::after{background:rgba(82,183,136,0.08);}
+.stat-pending::after{background:rgba(230,126,34,0.08);}
+.stat-resolved::after{background:rgba(26,77,46,0.08);}
+.stat-avg::after{background:rgba(91,48,181,0.08);}
+.stat-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:17px;}
+.stat-total .stat-icon{background:rgba(82,183,136,0.12);color:var(--accent);}
+.stat-pending .stat-icon{background:rgba(230,126,34,0.12);color:#e67e22;}
+.stat-resolved .stat-icon{background:rgba(26,77,46,0.12);color:var(--green);}
+.stat-avg .stat-icon{background:rgba(91,48,181,0.12);color:#6b30b5;}
+.stat-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:5px;}
+.stat-value{font-family:var(--font-h);font-size:34px;font-weight:700;line-height:1;color:var(--text);}
+.stat-value.small{font-size:22px;}
+.stat-sub{margin-top:7px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;}
+
+/* QUICK ACTIONS */
+.section-title{font-family:var(--font-h);font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;}
+.actions-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.action-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--text);transition:all 0.2s;}
+.action-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.08);border-color:var(--accent);color:var(--text);}
+.action-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:19px;}
+.action-icon.green{background:var(--light);color:var(--green);}
+.action-icon.blue{background:#e3f0ff;color:#1a6ebf;}
+.action-icon.purple{background:#f0ebff;color:#5b30b5;}
+.action-content h4{font-size:14px;font-weight:600;margin-bottom:3px;}
+.action-content p{font-size:12px;color:var(--muted);margin:0;line-height:1.4;}
+
+/* LATEST COMPLAINT */
+.latest-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:22px;margin-top:20px;}
+.latest-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.latest-header h4{font-family:var(--font-h);font-size:14px;font-weight:700;}
+.latest-header a{font-size:13px;color:var(--green);text-decoration:none;font-weight:600;}
+.latest-row{display:flex;align-items:center;gap:14px;}
+.latest-icon{width:44px;height:44px;border-radius:12px;background:var(--light);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.latest-icon i{color:var(--green);font-size:18px;}
+.latest-info h5{font-size:14px;font-weight:600;margin-bottom:4px;}
+.latest-info p{font-size:13px;color:var(--muted);margin:0;}
+.latest-badges{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.sev-badge{padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;}
+.sev-critical{background:#fdecea;color:#c0392b;}
+.sev-high{background:#fef0e0;color:#a04010;}
+.sev-medium{background:#fef9e7;color:#9a6000;}
+.sev-low{background:#e8faf0;color:#1a7a40;}
+.status-pending{background:#fff3e0;color:#e67e22;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;}
+.status-resolved{background:#e8faf0;color:#1a7a40;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;}
+.no-data{color:var(--muted);font-size:14px;text-align:center;padding:20px 0;}
+
+@media(max-width:1100px){.stats-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:992px){.dashboard-layout{grid-template-columns:1fr;}.cc-sidebar{display:none;}.actions-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){.welcome-banner{flex-direction:column;gap:20px;}.stats-grid{grid-template-columns:1fr 1fr;}.actions-grid{grid-template-columns:1fr;}.cc-content{padding:20px 16px;}}
+</style>
+</head>
+<body>
+
+<div class="dashboard-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="cc-sidebar">
+    <a class="sidebar-brand" href="{{ url_for('userhome') }}">
+      <div class="sidebar-brand-icon"><i class="fas fa-recycle"></i></div>
+      <span class="sidebar-brand-name">CITY<span>CARE</span></span>
+    </a>
+
+    <p class="sidebar-section-label">Navigation</p>
+
+    <nav class="sidebar-nav">
+      <a class="sidebar-link active" href="{{ url_for('userhome') }}">
+        <i class="fas fa-th-large"></i> Dashboard
+      </a>
+      <a class="sidebar-link" href="{{ url_for('create_complaint') }}">
+        <i class="fas fa-plus-circle"></i> New Complaint
+      </a>
+      <a class="sidebar-link" href="{{ url_for('view_complaints_user') }}">
+        <i class="fas fa-list-ul"></i> My Complaints
+      </a>
+      <a class="sidebar-link" href="{{ url_for('chatbot') }}">
+        <i class="fas fa-robot"></i> AI Assistant
+      </a>
+    </nav>
+
+    <div class="sidebar-logout">
+      <a href="{{ url_for('logout') }}">
+        <i class="fas fa-sign-out-alt"></i> Sign Out
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="cc-main">
+
+    <header class="cc-topbar">
+      <span class="topbar-title">Dashboard</span>
+      <span class="topbar-pill">Active Session</span>
+    </header>
+
+    <div class="cc-content">
+
+      <!-- WELCOME -->
+      <div class="welcome-banner">
+        <div class="welcome-text">
+          <h2>Welcome back 👋</h2>
+          <p>Here's a summary of your CityCare complaint activity.</p>
+        </div>
+        <div class="welcome-actions">
+          <a href="{{ url_for('create_complaint') }}" class="btn-white">
+            <i class="fas fa-plus"></i> New Complaint
+          </a>
+          <a href="{{ url_for('view_complaints_user') }}" class="btn-ghost-white">
+            <i class="fas fa-list"></i> View All
+          </a>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card stat-total">
+          <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+          <div class="stat-label">Total Complaints</div>
+          <div class="stat-value">{{ total if total else 0 }}</div>
+          <div class="stat-sub"><i class="fas fa-info-circle"></i> All time</div>
+        </div>
+        <div class="stat-card stat-pending">
+          <div class="stat-icon"><i class="fas fa-clock"></i></div>
+          <div class="stat-label">Pending</div>
+          <div class="stat-value">{{ pending if pending else 0 }}</div>
+          <div class="stat-sub"><i class="fas fa-hourglass-half"></i> Awaiting resolution</div>
+        </div>
+        <div class="stat-card stat-resolved">
+          <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+          <div class="stat-label">Resolved</div>
+          <div class="stat-value">{{ resolved if resolved else 0 }}</div>
+          <div class="stat-sub"><i class="fas fa-star"></i> Closed</div>
+        </div>
+        <div class="stat-card stat-avg">
+          <div class="stat-icon"><i class="fas fa-tachometer-alt"></i></div>
+          <div class="stat-label">Avg. Resolution</div>
+          <div class="stat-value small">{{ avg_days if avg_days else '—' }}
+            {% if avg_days and avg_days != 'N/A' %}<span style="font-size:14px;font-weight:400;color:var(--muted);font-family:var(--font-b);"> days</span>{% endif %}
+          </div>
+          <div class="stat-sub"><i class="fas fa-calendar-check"></i> Your average</div>
+        </div>
+      </div>
+
+      <!-- QUICK ACTIONS — 3 unique actions only -->
+      <p class="section-title">Quick Actions</p>
+      <div class="actions-grid">
+
+        <a class="action-card" href="{{ url_for('create_complaint') }}">
+          <div class="action-icon green"><i class="fas fa-plus-circle"></i></div>
+          <div class="action-content">
+            <h4>Submit a Complaint</h4>
+            <p>Report a new waste issue in your area</p>
+          </div>
+        </a>
+
+        <a class="action-card" href="{{ url_for('view_complaints_user') }}">
+          <div class="action-icon blue"><i class="fas fa-eye"></i></div>
+          <div class="action-content">
+            <h4>View My Complaints</h4>
+            <p>Track, edit or delete your submissions</p>
+          </div>
+        </a>
+
+        <a class="action-card" href="{{ url_for('chatbot') }}">
+          <div class="action-icon purple"><i class="fas fa-robot"></i></div>
+          <div class="action-content">
+            <h4>AI Assistant</h4>
+            <p>Get answers to waste management queries</p>
+          </div>
+        </a>
+
+      </div>
+
+      <!-- LATEST COMPLAINT -->
+      {% if latest %}
+      <div class="latest-card">
+        <div class="latest-header">
+          <h4>Most Recent Complaint</h4>
+          <a href="{{ url_for('view_complaints_user') }}">View all &rarr;</a>
+        </div>
+        <div class="latest-row">
+          <div class="latest-icon"><i class="fas fa-trash-alt"></i></div>
+          <div class="latest-info">
+            <h5>{{ latest[0] }} — {{ latest[1] }}</h5>
+            <p>Submitted {{ latest[4].strftime('%d %b %Y') if latest[4] else '' }}</p>
+          </div>
+          <div class="latest-badges">
+            {% if latest[2] %}
+            {% set sev = latest[2] %}
+            <span class="sev-badge sev-{{ sev.lower() }}">{{ sev }}</span>
+            {% endif %}
+            {% set st = latest[2] if latest[2] else 'pending' %}
+            <span class="status-{{ latest[2].lower() if latest[2] else 'pending' }}">
+              {{ latest[2] | capitalize if latest[2] else 'Pending' }}
+            </span>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static',filename='assets/js/jquery-3.2.1.min.js')}}"></script>
+<script src="{{ url_for('static',filename='assets/js/bootstrap.min.js')}}"></script>
+</body>
+</html>

@@ -1,0 +1,331 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/style.css')}}">
+
+<style>
+  :root {
+    --cc-dark: #0d1f13;
+    --cc-green: #1a4d2e;
+    --cc-mid: #2d6a4f;
+    --cc-accent: #52b788;
+    --cc-light: #d8f3dc;
+    --cc-white: #f8fdf9;
+    --cc-text: #1b2d23;
+    --cc-muted: #5a7a65;
+    --cc-border: #d0e8d8;
+    --cc-danger: #c0392b;
+    --cc-warning: #e67e22;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: #f0f6f2;
+    color: var(--cc-text);
+  }
+
+  /* ── TOP NAV ── */
+  .cc-nav {
+    background: var(--cc-dark);
+    border-bottom: 3px solid var(--cc-accent);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+
+  .cc-nav .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 64px;
+  }
+
+  .cc-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .cc-brand-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--cc-accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cc-brand-icon svg { width: 20px; height: 20px; fill: var(--cc-dark); }
+
+  .cc-brand-name {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.5px;
+  }
+
+  .cc-brand-name span { color: var(--cc-accent); }
+
+  .cc-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    list-style: none;
+  }
+
+  .cc-nav-links a {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .cc-nav-links a:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+  }
+
+  .cc-nav-links a.active {
+    background: var(--cc-accent);
+    color: var(--cc-dark);
+  }
+
+  .cc-nav-links a i { font-size: 13px; }
+
+  .cc-nav-links .logout-link a {
+    color: #ff8a80;
+  }
+
+  .cc-nav-links .logout-link a:hover {
+    background: rgba(255,100,80,0.15);
+    color: #ff5252;
+  }
+
+  /* Mobile toggle */
+  .cc-toggler {
+    display: none;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 768px) {
+    .cc-toggler { display: block; }
+    .cc-nav-links {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 64px; left: 0; right: 0;
+      background: var(--cc-dark);
+      padding: 12px;
+      gap: 2px;
+      border-bottom: 2px solid var(--cc-accent);
+    }
+    .cc-nav-links.open { display: flex; }
+    .cc-nav-links a { width: 100%; }
+  }
+
+  /* ── PAGE HERO BANNER ── */
+  .cc-page-banner {
+    background: var(--cc-green);
+    padding: 32px 0 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cc-page-banner::before {
+    content: '';
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: rgba(82,183,136,0.12);
+  }
+
+  .cc-page-banner::after {
+    content: '';
+    position: absolute;
+    right: 80px; top: 20px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: rgba(82,183,136,0.08);
+  }
+
+  .cc-banner-title {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+
+  .cc-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .cc-breadcrumb li a { color: var(--cc-accent); text-decoration: none; }
+  .cc-breadcrumb li::after { content: '/'; margin-left: 8px; }
+  .cc-breadcrumb li:last-child::after { display: none; }
+  .cc-breadcrumb li:last-child { color: rgba(255,255,255,0.9); }
+
+  /* ── GLOBAL UTILITY ── */
+  .cc-section { padding: 60px 0; }
+
+  .cc-card {
+    background: #fff;
+    border: 1px solid var(--cc-border);
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .cc-btn-primary {
+    background: var(--cc-green);
+    color: #fff;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 50px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cc-btn-primary:hover {
+    background: var(--cc-mid);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(26,77,46,0.3);
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .cc-btn-outline {
+    background: transparent;
+    color: var(--cc-green);
+    border: 1.5px solid var(--cc-green);
+    padding: 10px 24px;
+    border-radius: 50px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+  }
+
+  .cc-btn-outline:hover {
+    background: var(--cc-green);
+    color: #fff;
+  }
+
+  .cc-form-group { margin-bottom: 20px; }
+
+  .cc-form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--cc-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .cc-form-group .form-control {
+    border: 1.5px solid var(--cc-border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 15px;
+    font-family: var(--font-body);
+    color: var(--cc-text);
+    background: var(--cc-white);
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+
+  .cc-form-group .form-control:focus {
+    outline: none;
+    border-color: var(--cc-accent);
+    box-shadow: 0 0 0 3px rgba(82,183,136,0.15);
+  }
+
+  .cc-alert {
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cc-alert-success {
+    background: #eafaf1;
+    border: 1px solid #a9dfbf;
+    color: #1e8449;
+  }
+
+  .cc-alert-danger {
+    background: #fdedec;
+    border: 1px solid #f5b7b1;
+    color: #c0392b;
+  }
+</style>
+
+<nav class="cc-nav">
+  <div class="container">
+    <a class="cc-brand" href="{{ url_for('userhome') }}">
+      <div class="cc-brand-icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+          <path d="M10 11v6M14 11v6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="cc-brand-name">CITY<span>CARE</span></span>
+    </a>
+
+    <button class="cc-toggler" onclick="document.getElementById('ccNav').classList.toggle('open')">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <ul class="cc-nav-links" id="ccNav">
+      <li><a href="{{ url_for('userhome') }}"><i class="fas fa-th-large"></i> Dashboard</a></li>
+      <li><a href="{{ url_for('create_complaint') }}"><i class="fas fa-plus-circle"></i> New Complaint</a></li>
+      <li><a href="{{ url_for('view_complaints_user') }}"><i class="fas fa-list-ul"></i> My Complaints</a></li>
+      <li><a href="{{ url_for('chatbot') }}"><i class="fas fa-robot"></i> Assistant</a></li>
+      <li class="logout-link"><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+    </ul>
+  </div>
+</nav>

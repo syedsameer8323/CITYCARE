@@ -1,0 +1,318 @@
+{% include "user_header.html" %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityCare – Submit Complaint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+<style>
+:root {
+  --cc-dark:#0d1f13; --cc-green:#1a4d2e; --cc-mid:#2d6a4f;
+  --cc-accent:#52b788; --cc-light:#d8f3dc; --cc-white:#f8fdf9;
+  --cc-text:#1b2d23; --cc-muted:#5a7a65; --cc-border:#d0e8d8;
+  --font-display:'Syne',sans-serif; --font-body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;}
+body{font-family:var(--font-body);background:#f0f6f2;color:var(--cc-text);}
+
+.cc-page-banner{background:var(--cc-green);padding:32px 0 28px;position:relative;overflow:hidden;}
+.cc-page-banner::before{content:'';position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:rgba(82,183,136,0.12);}
+.cc-banner-title{font-family:var(--font-display);font-size:26px;font-weight:700;color:#fff;margin-bottom:8px;}
+.cc-breadcrumb{display:flex;align-items:center;gap:8px;list-style:none;font-size:13px;color:rgba(255,255,255,0.6);padding:0;margin:0;}
+.cc-breadcrumb a{color:var(--cc-accent);text-decoration:none;}
+.cc-breadcrumb li::after{content:'/';margin-left:8px;}
+.cc-breadcrumb li:last-child::after{display:none;}
+.cc-breadcrumb li:last-child{color:rgba(255,255,255,0.9);}
+
+.form-wrap{padding:52px 0 80px;}
+
+.form-card{background:#fff;border:1px solid var(--cc-border);border-radius:20px;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,0.07);}
+
+.form-card-header{margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--cc-border);}
+.form-card-header h3{font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:6px;}
+.form-card-header p{color:var(--cc-muted);font-size:14px;margin:0;}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.form-grid.full{grid-template-columns:1fr;}
+@media(max-width:640px){.form-grid{grid-template-columns:1fr;}}
+
+.cc-field{display:flex;flex-direction:column;gap:7px;}
+.cc-field label{font-size:12px;font-weight:600;color:var(--cc-muted);text-transform:uppercase;letter-spacing:0.6px;}
+.cc-field select,.cc-field input,.cc-field textarea{
+  border:1.5px solid var(--cc-border);border-radius:10px;
+  padding:11px 14px;font-size:15px;font-family:var(--font-body);
+  color:var(--cc-text);background:var(--cc-white);width:100%;
+  transition:border-color 0.2s,box-shadow 0.2s;
+}
+.cc-field select:focus,.cc-field input:focus,.cc-field textarea:focus{
+  outline:none;border-color:var(--cc-accent);
+  box-shadow:0 0 0 3px rgba(82,183,136,0.15);
+}
+.cc-field textarea{resize:vertical;min-height:110px;}
+
+/* Severity pill selector */
+.severity-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.sev-option input[type=radio]{display:none;}
+.sev-label{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:12px 8px;border-radius:12px;border:1.5px solid var(--cc-border);
+  cursor:pointer;transition:all 0.2s;font-size:13px;font-weight:600;
+  background:#fff;
+}
+.sev-label .sev-dot{width:12px;height:12px;border-radius:50%;}
+.sev-label.low .sev-dot{background:#2ecc71;} .sev-label.low{color:#1a7a40;}
+.sev-label.medium .sev-dot{background:#f39c12;} .sev-label.medium{color:#9a6000;}
+.sev-label.high .sev-dot{background:#e67e22;} .sev-label.high{color:#a04010;}
+.sev-label.critical .sev-dot{background:#e74c3c;} .sev-label.critical{color:#8b1a1a;}
+
+.sev-option input[type=radio]:checked + .sev-label.low{background:#e8faf0;border-color:#2ecc71;}
+.sev-option input[type=radio]:checked + .sev-label.medium{background:#fef9e7;border-color:#f39c12;}
+.sev-option input[type=radio]:checked + .sev-label.high{background:#fef0e0;border-color:#e67e22;}
+.sev-option input[type=radio]:checked + .sev-label.critical{background:#fdecea;border-color:#e74c3c;}
+
+/* File upload */
+.upload-zone{
+  border:2px dashed var(--cc-border);border-radius:12px;
+  padding:28px;text-align:center;cursor:pointer;
+  transition:border-color 0.2s,background 0.2s;
+  background:var(--cc-white);
+}
+.upload-zone:hover{border-color:var(--cc-accent);background:#f0faf5;}
+.upload-zone i{font-size:28px;color:var(--cc-muted);margin-bottom:8px;display:block;}
+.upload-zone p{margin:0;font-size:14px;color:var(--cc-muted);}
+.upload-zone input[type=file]{display:none;}
+#file-name{margin-top:8px;font-size:13px;color:var(--cc-accent);font-weight:600;}
+
+.cc-btn-primary{
+  background:var(--cc-green);color:#fff;border:none;
+  padding:14px 32px;border-radius:50px;
+  font-family:var(--font-body);font-size:15px;font-weight:600;
+  cursor:pointer;transition:all 0.2s;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.cc-btn-primary:hover{background:var(--cc-mid);transform:translateY(-2px);box-shadow:0 6px 20px rgba(26,77,46,0.28);}
+
+/* Info sidebar */
+.info-sidebar{display:flex;flex-direction:column;gap:16px;}
+.info-card{background:#fff;border:1px solid var(--cc-border);border-radius:16px;padding:22px;}
+.info-card h4{font-family:var(--font-display);font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.info-card h4 i{color:var(--cc-accent);}
+.sev-info-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--cc-border);font-size:13px;}
+.sev-info-row:last-child{border-bottom:none;}
+.sev-badge{padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;}
+.sev-badge.critical{background:#fdecea;color:#c0392b;}
+.sev-badge.high{background:#fef0e0;color:#a04010;}
+.sev-badge.medium{background:#fef9e7;color:#9a6000;}
+.sev-badge.low{background:#e8faf0;color:#1a7a40;}
+
+.cc-alert-success{background:#eafaf1;border:1px solid #a9dfbf;color:#1e8449;padding:14px 18px;border-radius:10px;font-size:14px;display:flex;align-items:center;gap:10px;margin-bottom:24px;}
+</style>
+</head>
+<body>
+
+<section class="cc-page-banner">
+  <div class="container">
+    <h1 class="cc-banner-title">Submit a Complaint</h1>
+    <ul class="cc-breadcrumb">
+      <li><a href="{{ url_for('userhome') }}">Dashboard</a></li>
+      <li>New Complaint</li>
+    </ul>
+  </div>
+</section>
+
+<div class="form-wrap">
+  <div class="container">
+
+    {% if msg %}
+    <div class="cc-alert-success">
+      <i class="fas fa-check-circle"></i> {{ msg }}
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+
+      <!-- FORM -->
+      <!-- FORM -->
+      <div class="col-lg-8">
+        <div class="form-card">
+          <div class="form-card-header">
+            <h3>Complaint Details</h3>
+            <p>Fill in all fields accurately. Your complaint will be prioritised based on severity and location.</p>
+          </div>
+
+          <form action="complaint_store" method="post" enctype="multipart/form-data">
+
+            <!-- GRID START -->
+            <div class="form-grid" style="margin-bottom:20px;">
+
+              <!-- CATEGORY -->
+              <div class="cc-field">
+                <label>Waste Category</label>
+                <select name="type" required>
+                  <option value="Organic">Organic Waste</option>
+                  <option value="Hazardous">Hazardous / Chemical Waste</option>
+                  <option value="Liquid">Liquid Waste</option>
+                  <option value="Domestic">Domestic Waste</option>
+                  <option value="Mixed">Mixed Waste</option>
+
+                  <option value="Garbage Overflow">Garbage Overflow</option>
+                  <option value="Uncollected Waste">Uncollected Waste</option>
+                  <option value="Streetlight Issue">Streetlight Not Working</option>
+                  <option value="Water Leakage">Water Leakage</option>
+                  <option value="Road Damage">Road Damage / Potholes</option>
+                  <option value="Drainage Issue">Drainage Blockage</option>
+                  <option value="Public Toilet Issue">Public Toilet Issue</option>
+                  <option value="Illegal Dumping">Illegal Dumping</option>
+                  <option value="Dead Animal">Dead Animal Removal</option>
+                </select>
+              </div>
+
+              <!-- LOCATION -->
+              <div class="cc-field">
+              <label>Location / Area</label>
+
+              <!-- INPUT WITH SUGGESTIONS -->
+              <input list="area_list" name="area" placeholder="Select or type your area" required>
+
+              <!-- SUGGESTION LIST -->
+              <datalist id="area_list">
+                <option value="Banjara Hills">
+                <option value="Jubilee Hills">
+                <option value="Madhapur">
+                <option value="Gachibowli">
+                <option value="Kukatpally">
+                <option value="Dilsukhnagar">
+                <option value="Secunderabad">
+                <option value="Ameerpet">
+                <option value="Mehdipatnam">
+                <option value="LB Nagar">
+              </datalist>
+
+            </div>
+
+            </div> <!-- ✅ IMPORTANT FIX (THIS WAS MISSING) -->
+
+            <!-- SEVERITY -->
+            <div class="cc-field" style="margin-bottom:20px;">
+              <label>Severity Level</label>
+              <div class="severity-grid">
+                <label class="sev-option">
+                  <input type="radio" name="severity" value="Low">
+                  <span class="sev-label low"><span class="sev-dot"></span>Low</span>
+                </label>
+                <label class="sev-option">
+                  <input type="radio" name="severity" value="Medium" checked>
+                  <span class="sev-label medium"><span class="sev-dot"></span>Medium</span>
+                </label>
+                <label class="sev-option">
+                  <input type="radio" name="severity" value="High">
+                  <span class="sev-label high"><span class="sev-dot"></span>High</span>
+                </label>
+                <label class="sev-option">
+                  <input type="radio" name="severity" value="Critical">
+                  <span class="sev-label critical"><span class="sev-dot"></span>Critical</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- DESCRIPTION -->
+            <div class="cc-field form-grid full" style="margin-bottom:20px;">
+              <label>Full Address / Description</label>
+              <textarea name="address"
+                placeholder="Describe the exact location and nature of the waste issue..."
+                required></textarea>
+            </div>
+
+            <!-- UPLOAD -->
+            <div class="cc-field" style="margin-bottom:28px;">
+              <label>Upload Photo</label>
+              <div class="upload-zone" onclick="document.getElementById('pic-input').click()">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Click to upload a photo of the waste</p>
+                <p style="font-size:12px;margin-top:4px;">JPG, PNG up to 5MB</p>
+                <div id="file-name"></div>
+                <input type="file" id="pic-input" name="pic" accept="image/*" required
+                       onchange="document.getElementById('file-name').textContent = this.files[0]?.name || ''">
+              </div>
+            </div>
+
+            <button class="cc-btn-primary" type="submit">
+              <i class="fas fa-paper-plane"></i> Submit Complaint
+            </button>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div class="col-lg-4">
+        <div class="info-sidebar">
+
+          <div class="info-card">
+            <h4><i class="fas fa-info-circle"></i> Severity Guide</h4>
+            <div class="sev-info-row">
+              <span>Critical</span>
+              <span class="sev-badge critical">Score: 10</span>
+            </div>
+            <div class="sev-info-row">
+              <span>High</span>
+              <span class="sev-badge high">Score: 7</span>
+            </div>
+            <div class="sev-info-row">
+              <span>Medium</span>
+              <span class="sev-badge medium">Score: 4</span>
+            </div>
+            <div class="sev-info-row">
+              <span>Low</span>
+              <span class="sev-badge low">Score: 1</span>
+            </div>
+            <p style="font-size:12px;color:var(--cc-muted);margin-top:12px;line-height:1.6;">
+              Higher severity complaints receive a higher priority score and are resolved first. Be honest — misuse affects others.
+            </p>
+          </div>
+
+          <div class="info-card">
+            <h4><i class="fas fa-lightbulb"></i> Tips</h4>
+            <ul style="font-size:13px;color:var(--cc-muted);padding-left:16px;line-height:2;">
+              <li>Choose <b>Critical</b> for hazardous/chemical waste</li>
+              <li>Choose <b>High</b> for overflowing bins or large dumps</li>
+              <li>Choose <b>Medium</b> for uncollected regular waste</li>
+              <li>Choose <b>Low</b> for minor littering issues</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% include "footer.html" %}
+<script src="{{ url_for('static',filename='assets/js/jquery-3.2.1.min.js')}}"></script>
+<script src="{{ url_for('static',filename='assets/js/bootstrap.min.js')}}"></script>
+
+<!-- ADD HERE -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    let select = document.getElementById("area_select");
+    let manualField = document.getElementById("area_manual");
+
+    select.addEventListener("change", function() {
+        if (this.value === "other") {
+            manualField.style.display = "block";
+            manualField.required = true;
+        } else {
+            manualField.style.display = "none";
+            manualField.required = false;
+        }
+    });
+});
+</script>
+</body>
+</html>

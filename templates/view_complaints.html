@@ -1,0 +1,219 @@
+{% include "user_header.html" %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityCare – My Complaints</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+<style>
+:root{
+  --cc-dark:#0d1f13;--cc-green:#1a4d2e;--cc-mid:#2d6a4f;
+  --cc-accent:#52b788;--cc-light:#d8f3dc;--cc-white:#f8fdf9;
+  --cc-text:#1b2d23;--cc-muted:#5a7a65;--cc-border:#d0e8d8;
+  --font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;}
+body{font-family:var(--font-body);background:#f0f6f2;color:var(--cc-text);}
+
+.cc-page-banner{background:var(--cc-green);padding:32px 0 28px;position:relative;overflow:hidden;}
+.cc-page-banner::before{content:'';position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:rgba(82,183,136,0.12);}
+.cc-banner-title{font-family:var(--font-display);font-size:26px;font-weight:700;color:#fff;margin-bottom:8px;}
+.cc-breadcrumb{display:flex;align-items:center;gap:8px;list-style:none;font-size:13px;color:rgba(255,255,255,0.6);padding:0;margin:0;}
+.cc-breadcrumb a{color:var(--cc-accent);text-decoration:none;}
+.cc-breadcrumb li::after{content:'/';margin-left:8px;}
+.cc-breadcrumb li:last-child::after{display:none;}
+.cc-breadcrumb li:last-child{color:rgba(255,255,255,0.9);}
+
+.page-content{padding:48px 0 80px;}
+
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.toolbar h3{font-family:var(--font-display);font-size:18px;font-weight:700;}
+.cc-btn-primary{background:var(--cc-green);color:#fff;border:none;padding:10px 20px;border-radius:50px;font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:7px;text-decoration:none;}
+.cc-btn-primary:hover{background:var(--cc-mid);color:#fff;}
+
+/* TABLE */
+.table-card{background:#fff;border:1px solid var(--cc-border);border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.05);}
+.cc-table{width:100%;border-collapse:collapse;}
+.cc-table thead{background:var(--cc-dark);}
+.cc-table thead th{padding:14px 16px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.8px;text-align:left;white-space:nowrap;}
+.cc-table tbody tr{border-bottom:1px solid var(--cc-border);transition:background 0.15s;}
+.cc-table tbody tr:last-child{border-bottom:none;}
+.cc-table tbody tr:hover{background:#f7fcf9;}
+.cc-table td{padding:14px 16px;font-size:14px;vertical-align:middle;}
+
+/* Severity badges */
+.sev-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:50px;font-size:11px;font-weight:700;}
+.sev-badge::before{content:'';width:7px;height:7px;border-radius:50%;}
+.sev-critical{background:#fdecea;color:#c0392b;} .sev-critical::before{background:#e74c3c;}
+.sev-high{background:#fef0e0;color:#a04010;} .sev-high::before{background:#e67e22;}
+.sev-medium{background:#fef9e7;color:#9a6000;} .sev-medium::before{background:#f39c12;}
+.sev-low{background:#e8faf0;color:#1a7a40;} .sev-low::before{background:#2ecc71;}
+
+/* Status badges */
+.status-badge{padding:4px 12px;border-radius:50px;font-size:11px;font-weight:700;}
+.status-pending{background:#fff3e0;color:#e67e22;}
+.status-resolved{background:#e8faf0;color:#1a7a40;}
+.status-verified{background:#e3f0ff;color:#1a6ebf;}
+.status-processing{background:#f3e8ff;color:#6b30b5;}
+
+/* Priority score pill */
+.score-pill{background:var(--cc-light);color:var(--cc-green);font-size:12px;font-weight:700;padding:4px 10px;border-radius:50px;display:inline-block;}
+
+/* Action buttons */
+.act-btn{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
+.act-edit{background:#e3f0ff;color:#1a6ebf;}
+.act-edit:hover{background:#1a6ebf;color:#fff;}
+.act-delete{background:#fdecea;color:#c0392b;}
+.act-delete:hover{background:#c0392b;color:#fff;}
+
+.cc-alert{padding:13px 18px;border-radius:10px;font-size:14px;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.cc-alert-success{background:#eafaf1;border:1px solid #a9dfbf;color:#1e8449;}
+.cc-alert-danger{background:#fdedec;border:1px solid #f5b7b1;color:#c0392b;}
+
+.empty-state{padding:60px;text-align:center;}
+.empty-state i{font-size:48px;color:var(--cc-muted);opacity:0.4;margin-bottom:16px;display:block;}
+.empty-state p{color:var(--cc-muted);font-size:15px;margin-bottom:20px;}
+
+@media(max-width:768px){
+  .cc-table thead{display:none;}
+  .cc-table tr{display:block;margin-bottom:12px;border:1px solid var(--cc-border);border-radius:12px;padding:12px;}
+  .cc-table td{display:flex;justify-content:space-between;padding:6px 0;border:none;font-size:13px;}
+  .cc-table td::before{content:attr(data-label);font-weight:600;color:var(--cc-muted);font-size:12px;}
+}
+</style>
+</head>
+<body>
+
+<section class="cc-page-banner">
+  <div class="container">
+    <h1 class="cc-banner-title">My Complaints</h1>
+    <ul class="cc-breadcrumb">
+      <li><a href="{{ url_for('userhome') }}">Dashboard</a></li>
+      <li>My Complaints</li>
+    </ul>
+  </div>
+</section>
+
+<div class="page-content">
+  <div class="container">
+
+    {% if msg %}
+    <div class="cc-alert cc-alert-success"><i class="fas fa-check-circle"></i> {{ msg }}</div>
+    {% endif %}
+    {% if msg2 %}
+    <div class="cc-alert cc-alert-danger"><i class="fas fa-trash"></i> {{ msg2 }}</div>
+    {% endif %}
+
+    <div class="toolbar">
+      <h3>Complaint History</h3>
+      <a href="{{ url_for('create_complaint') }}" class="cc-btn-primary">
+        <i class="fas fa-plus"></i> New Complaint
+      </a>
+    </div>
+
+    <div class="table-card">
+      {% if rawdata %}
+      <div style="overflow-x:auto;">
+        <table class="cc-table">
+          <thead>
+            <tr>
+              <th>#ID</th>
+              <th>Category</th>
+              <th>Location</th>
+              <th>Severity</th>
+              <th>Priority</th>
+              <th>Assigned To</th>
+              <th>Status</th>
+              <th>Submitted</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rawdata %}
+            {# row: 0=id, 1=name, 2=userid, 3=phone, 4=category, 5=location,
+                     6=address, 7=image, 8=status, 9=severity, 10=priority_score,
+                     11=assigned_staff, 12=created_at, 13=feedback_rating #}
+            <tr>
+              <td data-label="ID"><b>#{{ row[0] }}</b></td>
+              <td data-label="Category">{{ row[4] }}</td>
+              <td data-label="Location"><i class="fas fa-map-marker-alt" style="color:var(--cc-accent);margin-right:4px;font-size:11px;"></i>{{ row[5] }}</td>
+              <td data-label="Severity">
+                {% set sev = row[9] if row[9] else 'Medium' %}
+                <span class="sev-badge sev-{{ sev.lower() }}">{{ sev }}</span>
+              </td>
+              <td data-label="Priority">
+                <span class="score-pill">{{ row[10] if row[10] else '—' }}</span>
+              </td>
+              <td data-label="Assigned To">
+                {% if row[11] %}
+                  <i class="fas fa-user-hard-hat" style="color:var(--cc-muted);font-size:11px;margin-right:4px;"></i>{{ row[11] }}
+                {% else %}
+                  <span style="color:var(--cc-muted);font-size:12px;">Unassigned</span>
+                {% endif %}
+              </td>
+              <td data-label="Status">
+                {% set st = row[8].lower() if row[8] else 'pending' %}
+                <span class="status-badge status-{{ st }}">{{ row[8] | capitalize }}</span>
+              </td>
+              <td data-label="Submitted" style="font-size:12px;color:var(--cc-muted);">
+                {{ row[12].strftime('%d %b %Y') if row[12] else '—' }}
+              </td>
+              <td data-label="Actions">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                  {% if row[8].lower() != 'resolved' %}
+                  <a href="{{ url_for('complaint_update', cid=row[0]) }}" class="act-btn act-edit">
+                    <i class="fas fa-edit"></i> Edit
+                  </a>
+                  {% endif %}
+                  {# Show feedback button only for resolved complaints #}
+                  {% if row[8].lower() == 'resolved' %}
+                    {% if row[13] %}
+                      {# Already rated — show stars #}
+                      <span style="color:#f39c12;font-size:13px;" title="Your rating: {{ row[13] }}/5">
+                        {% for i in range(row[13]) %}&#9733;{% endfor %}
+                      </span>
+                    {% else %}
+                      {# Not yet rated — show Rate button #}
+                      <a href="{{ url_for('submit_feedback', cid=row[0]) }}"
+                         class="act-btn"
+                         style="background:#fef9e7;color:#9a6000;border:1px solid #f39c12;">
+                        <i class="fas fa-star"></i> Rate
+                      </a>
+                    {% endif %}
+                  {% endif %}
+                  <a href="{{ url_for('complaint_delete', cid=row[0]) }}"
+                     class="act-btn act-delete"
+                     onclick="return confirm('Delete this complaint?')">
+                    <i class="fas fa-trash"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fas fa-clipboard-list"></i>
+        <p>You haven't submitted any complaints yet.</p>
+        <a href="{{ url_for('create_complaint') }}" class="cc-btn-primary">
+          <i class="fas fa-plus"></i> Submit Your First Complaint
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+{% include "footer.html" %}
+<script src="{{ url_for('static',filename='assets/js/jquery-3.2.1.min.js')}}"></script>
+<script src="{{ url_for('static',filename='assets/js/bootstrap.min.js')}}"></script>
+</body>
+</html>
