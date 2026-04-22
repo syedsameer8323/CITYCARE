@@ -11,6 +11,15 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
 <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
 <style>
+  html, body {
+      height: 100%;
+      margin: 0;
+  }
+
+  body {
+      display: flex;
+      flex-direction: column;
+  }
 :root{
   --cc-dark:#0d1f13;--cc-green:#1a4d2e;--cc-mid:#2d6a4f;
   --cc-accent:#52b788;--cc-light:#d8f3dc;--cc-white:#f8fdf9;
@@ -29,7 +38,7 @@ body{font-family:var(--font-body);background:#f0f6f2;color:var(--cc-text);}
 .cc-breadcrumb li:last-child::after{display:none;}
 .cc-breadcrumb li:last-child{color:rgba(255,255,255,0.9);}
 
-.page-content{padding:48px 0 80px;}
+.page-content{padding:48px 0 80px;flex: 1;}
 
 .toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
 .toolbar h3{font-family:var(--font-display);font-size:18px;font-weight:700;}
@@ -135,67 +144,88 @@ body{font-family:var(--font-body);background:#f0f6f2;color:var(--cc-text);}
           </thead>
           <tbody>
             {% for row in rawdata %}
-            {# row: 0=id, 1=name, 2=userid, 3=phone, 4=category, 5=location,
-                     6=address, 7=image, 8=status, 9=severity, 10=priority_score,
-                     11=assigned_staff, 12=created_at, 13=feedback_rating #}
             <tr>
-              <td data-label="ID"><b>#{{ row[0] }}</b></td>
-              <td data-label="Category">{{ row[4] }}</td>
-              <td data-label="Location"><i class="fas fa-map-marker-alt" style="color:var(--cc-accent);margin-right:4px;font-size:11px;"></i>{{ row[5] }}</td>
+
+              <td data-label="ID">
+                <b>#{{ row['complaint_id'] }}</b>
+              </td>
+
+              <td data-label="Category">
+                {{ row['category'] }}
+              </td>
+
+              <td data-label="Location">
+                <i class="fas fa-map-marker-alt" style="color:var(--cc-accent);margin-right:4px;font-size:11px;"></i>
+                {{ row['location'] }}
+              </td>
+
               <td data-label="Severity">
-                {% set sev = row[9] if row[9] else 'Medium' %}
+                {% set sev = row['severity'] if row['severity'] else 'Medium' %}
                 <span class="sev-badge sev-{{ sev.lower() }}">{{ sev }}</span>
               </td>
+
               <td data-label="Priority">
-                <span class="score-pill">{{ row[10] if row[10] else '—' }}</span>
+                <span class="score-pill">
+                  {{ row['priority_score'] if row['priority_score'] else '—' }}
+                </span>
               </td>
+
               <td data-label="Assigned To">
-                {% if row[11] %}
-                  <i class="fas fa-user-hard-hat" style="color:var(--cc-muted);font-size:11px;margin-right:4px;"></i>{{ row[11] }}
+                {% if row['assigned_staff'] %}
+                  <i class="fas fa-user-hard-hat" style="color:var(--cc-muted);font-size:11px;margin-right:4px;"></i>
+                  {{ row['assigned_staff'] }}
                 {% else %}
                   <span style="color:var(--cc-muted);font-size:12px;">Unassigned</span>
                 {% endif %}
               </td>
+
               <td data-label="Status">
-                {% set st = row[8].lower() if row[8] else 'pending' %}
-                <span class="status-badge status-{{ st }}">{{ row[8] | capitalize }}</span>
+                {% set st = row['status'].lower() if row['status'] else 'pending' %}
+                <span class="status-badge status-{{ st }}">
+                  {{ row['status'] | capitalize }}
+                </span>
               </td>
+
               <td data-label="Submitted" style="font-size:12px;color:var(--cc-muted);">
-                {{ row[12].strftime('%d %b %Y') if row[12] else '—' }}
+                {{ row['created_at'].strftime('%d %b %Y') if row['created_at'] else '—' }}
               </td>
+
               <td data-label="Actions">
                 <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-                  {% if row[8].lower() != 'resolved' %}
-                  <a href="{{ url_for('complaint_update', cid=row[0]) }}" class="act-btn act-edit">
+
+                  {% if row['status'] and row['status'].lower() != 'resolved' %}
+                  <a href="{{ url_for('complaint_update', cid=row['complaint_id']) }}"
+                    class="act-btn act-edit">
                     <i class="fas fa-edit"></i> Edit
                   </a>
                   {% endif %}
-                  {# Show feedback button only for resolved complaints #}
-                  {% if row[8].lower() == 'resolved' %}
-                    {% if row[13] %}
-                      {# Already rated — show stars #}
-                      <span style="color:#f39c12;font-size:13px;" title="Your rating: {{ row[13] }}/5">
-                        {% for i in range(row[13]) %}&#9733;{% endfor %}
+
+                  {% if row['status'] and row['status'].lower() == 'resolved' %}
+                    {% if row.get('feedback_rating') %}
+                      <span style="color:#f39c12;font-size:13px;" title="Your rating: {{ row['feedback_rating'] }}/5">
+                        {% for i in range(row['feedback_rating']) %}★{% endfor %}
                       </span>
                     {% else %}
-                      {# Not yet rated — show Rate button #}
-                      <a href="{{ url_for('submit_feedback', cid=row[0]) }}"
-                         class="act-btn"
-                         style="background:#fef9e7;color:#9a6000;border:1px solid #f39c12;">
+                      <a href="{{ url_for('submit_feedback', cid=row['complaint_id']) }}"
+                        class="act-btn"
+                        style="background:#fef9e7;color:#9a6000;border:1px solid #f39c12;">
                         <i class="fas fa-star"></i> Rate
                       </a>
                     {% endif %}
                   {% endif %}
-                  <a href="{{ url_for('complaint_delete', cid=row[0]) }}"
-                     class="act-btn act-delete"
-                     onclick="return confirm('Delete this complaint?')">
+
+                  <a href="{{ url_for('complaint_delete', cid=row['complaint_id']) }}"
+                    class="act-btn act-delete"
+                    onclick="return confirm('Delete this complaint?')">
                     <i class="fas fa-trash"></i>
                   </a>
+
                 </div>
               </td>
+
             </tr>
             {% endfor %}
-          </tbody>
+            </tbody>
         </table>
       </div>
       {% else %}

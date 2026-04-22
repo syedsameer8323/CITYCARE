@@ -436,8 +436,10 @@ body { font-family: var(--font-b); color: var(--text); background: #fff; overflo
       <li><a href="#how-it-works">How it Works</a></li>
       <li><a href="#features">Features</a></li>
       <li><a href="#priority">Priority Engine</a></li>
+      <li><a href="/staff/login">Staff Login</a></li>
       <li><a href="{{ url_for('user') }}">Login</a></li>
       <li><a href="{{ url_for('user_signup') }}" class="nav-cta">Get Started</a></li>
+      
     </ul>
   </div>
 </nav>
@@ -685,6 +687,9 @@ body { font-family: var(--font-b); color: var(--text); background: #fff; overflo
         </ul>
         <a href="{{ url_for('admin') }}" class="btn-persona admin">
           <i class="fas fa-lock"></i> Admin Login
+        <a href="/staff/login" class="btn-persona admin">
+           <i class="fas fa-hard-hat"></i> Staff Login
+        </a>
         </a>
       </div>
     </div>

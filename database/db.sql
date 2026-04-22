@@ -1,111 +1,155 @@
-/*!40101 SET NAMES utf8 */;
-/*!40101 SET SQL_MODE=''*/;
+-- ================================================================
+--  CityCare  –  DB ADDITIONS  (MySQL / InnoDB)
+--  Run ONCE against your existing waste_management_system DB
+-- ================================================================
 
-create database if not exists `waste_management_system`;
 USE `waste_management_system`;
 
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+-- ────────────────────────────────────────────────────────────────
+-- 1. Patch existing `complaints` – add columns if missing
+-- ────────────────────────────────────────────────────────────────
+DROP PROCEDURE IF EXISTS add_col;
+DELIMITER $$
+CREATE PROCEDURE add_col(IN tbl VARCHAR(100), IN col VARCHAR(100), IN defn TEXT)
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA='waste_management_system'
+          AND TABLE_NAME=tbl AND COLUMN_NAME=col
+    ) THEN
+        SET @s = CONCAT('ALTER TABLE `',tbl,'` ADD COLUMN `',col,'` ',defn);
+        PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+    END IF;
+END$$
+DELIMITER ;
 
--- ─────────────────────────────────────────
---  USERS
--- ─────────────────────────────────────────
-DROP TABLE IF EXISTS `users`;
-CREATE TABLE `users` (
-  `user_name` varchar(100) DEFAULT NULL,
-  `userid`    varchar(100) DEFAULT NULL,
-  `email`     varchar(100) DEFAULT NULL,
-  `passwrd`   varchar(100) DEFAULT NULL,
-  `phno`      varchar(100) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+CALL add_col('complaints','',
+    'INT(10) DEFAULT NULL AFTER `assigned_staff`');
+CALL add_col('complaints','resolved_at',
+    'DATETIME DEFAULT NULL');
 
-INSERT INTO `users` VALUES
-('CLOUDTECHNOLOGIES','ct123','ct@gmail.com','12345','8121583911');
+DROP PROCEDURE IF EXISTS add_col;
 
--- ─────────────────────────────────────────
---  STAFF  (new)
--- ─────────────────────────────────────────
-DROP TABLE IF EXISTS `staff`;
-CREATE TABLE `staff` (
-  `staff_id`     int(10)      NOT NULL AUTO_INCREMENT,
-  `staff_name`   varchar(100) NOT NULL,
-  `designation`  varchar(100) DEFAULT 'Field Officer',
-  `phone`        varchar(20)  DEFAULT NULL,
-  `available`    tinyint(1)   DEFAULT 1,   -- 1 = free, 0 = busy
-  `current_load` int(5)       DEFAULT 0,   -- # active complaints assigned
-  PRIMARY KEY (`staff_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+-- ────────────────────────────────────────────────────────────────
+-- 2. STAFF ACCOUNTS  (portal logins for field staff)
+-- ────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `staff_accounts` (
+  `id`                INT(10)       NOT NULL AUTO_INCREMENT,
+  `name`              VARCHAR(100)  NOT NULL,
+  `employee_id`       VARCHAR(50)   NOT NULL,
+  `email`             VARCHAR(100)  NOT NULL,
+  `phone`             VARCHAR(20)   NOT NULL,
+  `password_hash`     VARCHAR(255)  NOT NULL,
+  `department`        VARCHAR(100)  NOT NULL,
+  `designation`       VARCHAR(100)  NOT NULL,
+  `zone`              VARCHAR(150)  NOT NULL,
+  `notify_pref`       ENUM('email','sms','both') DEFAULT 'both',
+  `performance_score` INT(3)        DEFAULT 50,
+  `avg_rating`        DECIMAL(3,2)  DEFAULT 0.00,
+  `total_ratings`     INT(6)        DEFAULT 0,
+  `is_active`         TINYINT(1)    DEFAULT 1,
+  `is_approved`       TINYINT(1)    DEFAULT 0,
+  `joined`            DATETIME      DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_email`       (`email`),
+  UNIQUE KEY `uq_employee_id` (`employee_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO `staff` (`staff_name`,`designation`,`phone`,`available`,`current_load`) VALUES
-('Ravi Kumar',   'Field Officer',  '9000000001', 1, 0),
-('Sunita Rao',   'Field Officer',  '9000000002', 1, 0),
-('Anil Sharma',  'Supervisor',     '9000000003', 1, 0),
-('Meena Das',    'Field Officer',  '9000000004', 1, 0),
-('Kiran Babu',   'Supervisor',     '9000000005', 1, 0);
+-- ────────────────────────────────────────────────────────────────
+-- 3. STAFF NOTIFICATIONS
+-- ────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `staff_notifications` (
+  `id`           INT(10)      NOT NULL AUTO_INCREMENT,
+  `staff_id`     INT(10)      NOT NULL,
+  `type`         VARCHAR(30)  DEFAULT 'system',
+  `title`        VARCHAR(200) NOT NULL,
+  `message`      TEXT         NOT NULL,
+  `complaint_id` INT(10)      DEFAULT NULL,
+  `is_read`      TINYINT(1)   DEFAULT 0,
+  `created_at`   DATETIME     DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_notif_staff` (`staff_id`,`is_read`),
+  CONSTRAINT `fk_notif_staff`
+    FOREIGN KEY (`staff_id`) REFERENCES `staff_accounts`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ─────────────────────────────────────────
---  COMPLAINTS  (upgraded)
--- ─────────────────────────────────────────
-DROP TABLE IF EXISTS `complaints`;
-CREATE TABLE `complaints` (
-  `complaint_id`   int(10)      NOT NULL AUTO_INCREMENT,
-  `user_name`      varchar(100) DEFAULT NULL,
-  `userid`         varchar(100) DEFAULT NULL,
-  `phone_number`   varchar(100) DEFAULT NULL,
-  `category`       varchar(100) DEFAULT NULL,
-  `location`       varchar(100) DEFAULT NULL,
-  `adddress`       varchar(255) DEFAULT NULL,
-  `waste_image`    varchar(100) DEFAULT NULL,
-  `status`         varchar(50)  DEFAULT 'pending',
+-- ────────────────────────────────────────────────────────────────
+-- 4. COMPLAINT PHOTOS  (before / after evidence)
+-- ────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `complaint_photos` (
+  `id`           INT(10)      NOT NULL AUTO_INCREMENT,
+  `complaint_id` INT(10)      NOT NULL,
+  `staff_id`     INT(10)      NOT NULL,
+  `filename`     VARCHAR(255) NOT NULL,
+  `photo_type`   ENUM('before','after') NOT NULL,
+  `uploaded_at`  DATETIME     DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_photos_complaint` (`complaint_id`),
+  CONSTRAINT `fk_photos_complaint`
+    FOREIGN KEY (`complaint_id`) REFERENCES `complaints`(`complaint_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_photos_staff`
+    FOREIGN KEY (`staff_id`) REFERENCES `staff_accounts`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-  -- NEW PRIORITY FIELDS
-  `severity`       varchar(20)  DEFAULT 'Medium',
-    -- values: Critical | High | Medium | Low
-  `severity_score` int(3)       DEFAULT 4,
-    -- Critical=10, High=7, Medium=4, Low=1
-  `priority_score` float        DEFAULT 0,
-    -- computed: severity_score*0.5 + waiting_days*0.3 + area_load*0.2
-  `assigned_staff` varchar(100) DEFAULT NULL,
-  `staff_id`       int(10)      DEFAULT NULL,
+-- ────────────────────────────────────────────────────────────────
+-- 5. COMPLAINT ACTIVITY LOG
+-- ────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `complaint_activity` (
+  `id`           INT(10)      NOT NULL AUTO_INCREMENT,
+  `complaint_id` INT(10)      NOT NULL,
+  `staff_id`     INT(10)      NOT NULL,
+  `action`       VARCHAR(255) NOT NULL,
+  `notes`        TEXT,
+  `created_at`   DATETIME     DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_activity_complaint` (`complaint_id`),
+  CONSTRAINT `fk_activity_complaint`
+    FOREIGN KEY (`complaint_id`) REFERENCES `complaints`(`complaint_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_activity_staff`
+    FOREIGN KEY (`staff_id`) REFERENCES `staff_accounts`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-  -- TIMESTAMPS
-  `created_at`     datetime     DEFAULT CURRENT_TIMESTAMP,
-  `resolved_at`    datetime     DEFAULT NULL,
+-- ────────────────────────────────────────────────────────────────
+-- 6. STAFF RATINGS  (citizen rates after complaint resolved)
+-- ────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `staff_ratings` (
+  `id`           INT(10)      NOT NULL AUTO_INCREMENT,
+  `complaint_id` INT(10)      NOT NULL,
+  `staff_id`     INT(10)      NOT NULL,
+  `userid`       VARCHAR(100) NOT NULL,
+  `rating`       TINYINT(1)   NOT NULL,
+  `comment`      TEXT,
+  `created_at`   DATETIME     DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_rating_complaint` (`complaint_id`),
+  KEY `idx_ratings_staff` (`staff_id`),
+  CONSTRAINT `fk_rating_complaint`
+    FOREIGN KEY (`complaint_id`) REFERENCES `complaints`(`complaint_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_rating_staff`
+    FOREIGN KEY (`staff_id`) REFERENCES `staff_accounts`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-  PRIMARY KEY (`complaint_id`),
-  KEY `fk_staff` (`staff_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
+-- ────────────────────────────────────────────────────────────────
+-- 7. Extra indexes on complaints
+-- ────────────────────────────────────────────────────────────────
+DROP PROCEDURE IF EXISTS add_idx;
+DELIMITER $$
+CREATE PROCEDURE add_idx(IN tbl VARCHAR(100), IN idx VARCHAR(100), IN defn TEXT)
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.STATISTICS
+        WHERE TABLE_SCHEMA='waste_management_system'
+          AND TABLE_NAME=tbl AND INDEX_NAME=idx
+    ) THEN
+        SET @s = CONCAT('ALTER TABLE `',tbl,'` ADD ',defn);
+        PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+    END IF;
+END$$
+DELIMITER ;
 
-INSERT INTO `complaints`
-  (`complaint_id`,`user_name`,`userid`,`phone_number`,`category`,
-   `location`,`adddress`,`waste_image`,`status`,
-   `severity`,`severity_score`,`priority_score`,`assigned_staff`,`created_at`)
-VALUES
-  (5,'CLOUDTECHNOLOGIES','ct123','8121583911','Hazardous',
-   'Kukatpally','opposite lulu mall','waste2.jpg','pending',
-   'High',7,12.5,'Ravi Kumar',NOW() - INTERVAL 3 DAY);
+CALL add_idx('complaints','idx_complaints_staff',
+    'INDEX `idx_complaints_staff` (``)');
+CALL add_idx('complaints','idx_complaints_loc',
+    'INDEX `idx_complaints_loc` (`location`(50))');
 
--- ─────────────────────────────────────────
---  QUESTIONS  (unchanged)
--- ─────────────────────────────────────────
-DROP TABLE IF EXISTS `questions`;
-CREATE TABLE `questions` (
-  `qid`      int(10)       NOT NULL AUTO_INCREMENT,
-  `question` varchar(1000) DEFAULT NULL,
-  `answer`   varchar(1000) DEFAULT NULL,
-  UNIQUE KEY `qid` (`qid`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1;
-
-INSERT INTO `questions` VALUES
-(3,'Hi','Hi, how can I help you!'),
-(4,'Hello','Hello, how are you?'),
-(5,'How are you?','I am good. What about you?'),
-(6,'how i can keep environment clean?','Reduce waste: reuse, recycle, and compost. Avoid single-use plastics.'),
-(7,'What is waste management and why is it important?','The process of collecting, transporting, and disposing of waste in an environmentally safe way.'),
-(8,'How can I reduce waste at home','Avoid plastic bags and bottles; use reusable cloth bags and stainless steel bottles instead.'),
-(9,'What are the different types of waste','Hazardous, Liquid, Solid, Organic, and Recyclable waste.'),
-(10,'What do I do with expired medications?','Bring them to authorised drug take-back programmes near you.'),
-(11,'What are the best ways to handle garden waste?','Compost it in a sunny spot. Garden waste becomes excellent fertiliser.');
-
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+DROP PROCEDURE IF EXISTS add_idx;

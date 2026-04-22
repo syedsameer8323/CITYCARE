@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityCare – Notifications</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+<style>
+:root{
+  --dark:#0d1f13;--green:#1a4d2e;--mid:#2d6a4f;
+  --accent:#52b788;--light:#d8f3dc;--lighter:#edf7f0;
+  --white:#f8fdf9;--text:#1b2d23;--muted:#5a7a65;--border:#d0e8d8;
+  --font-h:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-b);background:#eef5f0;color:var(--text);}
+.page-banner{background:linear-gradient(135deg,var(--dark) 0%,#163d25 100%);padding:24px 0 20px;}
+.banner-title{font-family:var(--font-h);font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;}
+.breadcrumb{display:flex;align-items:center;gap:8px;list-style:none;font-size:12px;color:rgba(255,255,255,0.5);padding:0;margin:0;}
+.breadcrumb a{color:var(--accent);text-decoration:none;}
+.breadcrumb li::after{content:'/';margin-left:8px;}
+.breadcrumb li:last-child::after{display:none;}
+.main-content{padding:32px 0 80px;}
+.notif-wrap{max-width:700px;margin:0 auto;}
+.notif-actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.notif-actions h4{font-family:var(--font-h);font-size:16px;font-weight:700;}
+.mark-all-btn{background:none;border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;font-family:var(--font-b);color:var(--green);cursor:pointer;transition:all 0.2s;}
+.mark-all-btn:hover{background:var(--light);border-color:var(--accent);}
+.notif-list{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+.notif-item{padding:16px 20px;border-bottom:1px solid #f0f6f2;display:flex;align-items:flex-start;gap:14px;transition:background 0.15s;cursor:pointer;}
+.notif-item:last-child{border-bottom:none;}
+.notif-item:hover{background:#fafcfb;}
+.notif-item.unread{background:#f0faf5;border-left:3px solid var(--accent);}
+.notif-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;}
+.ni-assign{background:#e3f0ff;color:#1a6ebf;}
+.ni-reminder{background:#fff3e0;color:#e67e22;}
+.ni-resolved{background:#e8faf0;color:var(--green);}
+.ni-system{background:var(--light);color:var(--green);}
+.notif-body{flex:1;}
+.notif-title{font-size:14px;font-weight:600;margin-bottom:4px;}
+.notif-msg{font-size:13px;color:var(--muted);line-height:1.5;}
+.notif-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+.notif-time{font-size:11px;color:var(--muted);}
+.notif-link{font-size:12px;font-weight:600;color:var(--green);text-decoration:none;}
+.notif-link:hover{color:var(--mid);}
+.notif-unread-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:6px;}
+.notif-read-dot{width:8px;height:8px;flex-shrink:0;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-state i{font-size:44px;opacity:0.2;display:block;margin-bottom:14px;}
+</style>
+</head>
+<body>
+<div class="page-banner">
+  <div class="container">
+    <div class="banner-title">Notifications</div>
+    <ul class="breadcrumb">
+      <li><a href="{{ url_for('staff_home') }}">Dashboard</a></li>
+      <li>Notifications</li>
+    </ul>
+  </div>
+</div>
+<div class="main-content">
+  <div class="container">
+    <div class="notif-wrap">
+      <div class="notif-actions">
+        <h4>All Notifications <span style="font-size:13px;color:var(--muted);font-family:var(--font-b);font-weight:400;">({{ notifications|length }})</span></h4>
+        {% if notifications %}
+        <form method="POST" action="{{ url_for('staff_mark_all_read') }}" style="display:inline;">
+          <button type="submit" class="mark-all-btn"><i class="fas fa-check-double" style="margin-right:5px;"></i>Mark all read</button>
+        </form>
+        {% endif %}
+      </div>
+      {% if notifications %}
+      <div class="notif-list">
+        {% for n in notifications %}
+        <div class="notif-item {{ 'unread' if not n.is_read else '' }}">
+          {% set icon_class = 'ni-assign' if n.type == 'assignment' else 'ni-reminder' if n.type == 'reminder' else 'ni-resolved' if n.type == 'resolved' else 'ni-system' %}
+          {% set icon_fa = 'user-check' if n.type == 'assignment' else 'bell' if n.type == 'reminder' else 'check-circle' if n.type == 'resolved' else 'info-circle' %}
+          <div class="notif-icon {{ icon_class }}"><i class="fas fa-{{ icon_fa }}"></i></div>
+          <div class="notif-body">
+            <div class="notif-title">{{ n.title }}</div>
+            <div class="notif-msg">{{ n.message }}</div>
+            <div class="notif-footer">
+              <span class="notif-time"><i class="fas fa-clock" style="font-size:10px;margin-right:3px;"></i>{{ n.created_at.strftime('%d %b %Y, %I:%M %p') if n.created_at else '' }}</span>
+              {% if n.complaint_id %}
+              <a href="{{ url_for('staff_manage_complaint', complaint_id=n.complaint_id) }}" class="notif-link">View complaint &rarr;</a>
+              {% endif %}
+            </div>
+          </div>
+          <div class="{{ 'notif-unread-dot' if not n.is_read else 'notif-read-dot' }}"></div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="notif-list">
+        <div class="empty-state">
+          <i class="fas fa-bell-slash"></i>
+          <div style="font-size:15px;font-weight:600;margin-bottom:6px;">No notifications yet</div>
+          <div style="font-size:13px;">You'll be notified when complaints are assigned to you.</div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+</body>
+</html>

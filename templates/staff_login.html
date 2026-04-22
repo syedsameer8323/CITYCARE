@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityCare – Staff Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+<style>
+:root{
+  --dark:#0d1f13;--green:#1a4d2e;--mid:#2d6a4f;
+  --accent:#52b788;--light:#d8f3dc;--lighter:#edf7f0;
+  --white:#f8fdf9;--text:#1b2d23;--muted:#5a7a65;--border:#d0e8d8;
+  --font-h:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-b);background:#eef5f0;color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 16px;}
+.login-wrap{width:100%;max-width:440px;}
+.login-card{background:#fff;border-radius:24px;box-shadow:0 16px 64px rgba(13,31,19,0.13);overflow:hidden;}
+.login-header{background:linear-gradient(135deg,var(--dark) 0%,#1a3d20 100%);padding:40px 36px 32px;text-align:center;position:relative;overflow:hidden;}
+.login-header::before{content:'';position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:rgba(82,183,136,0.08);}
+.login-header::after{content:'';position:absolute;left:-30px;bottom:-30px;width:100px;height:100px;border-radius:50%;background:rgba(82,183,136,0.05);}
+.login-avatar{width:72px;height:72px;background:rgba(82,183,136,0.12);border:2px solid rgba(82,183,136,0.25);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;position:relative;z-index:1;}
+.login-avatar i{color:var(--accent);font-size:32px;}
+.login-header h2{font-family:var(--font-h);font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-0.5px;position:relative;z-index:1;}
+.login-header p{font-size:13px;color:rgba(255,255,255,0.45);margin:0;position:relative;z-index:1;}
+.staff-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(82,183,136,0.15);border:1px solid rgba(82,183,136,0.3);color:var(--accent);font-size:11px;font-weight:700;padding:4px 12px;border-radius:50px;margin-top:10px;position:relative;z-index:1;}
+
+.login-body{padding:32px 36px 36px;}
+.form-group{margin-bottom:16px;}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:0.3px;}
+.input-wrap{position:relative;}
+.input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;}
+.form-control{width:100%;padding:11px 14px 11px 40px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:var(--font-b);color:var(--text);background:var(--white);transition:all 0.2s;}
+.form-control:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(82,183,136,0.12);}
+.form-control::placeholder{color:#a8c4b0;}
+.login-btn{width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,var(--green) 0%,var(--mid) 100%);color:#fff;border:none;cursor:pointer;font-size:15px;font-weight:600;font-family:var(--font-b);transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(26,77,46,0.3);}
+.divider{text-align:center;font-size:12px;color:var(--muted);margin:20px 0;position:relative;}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--border);}
+.divider::before{left:0;}.divider::after{right:0;}
+.reg-link{text-align:center;font-size:13px;color:var(--muted);}
+.reg-link a{color:var(--green);font-weight:600;text-decoration:none;}
+.admin-link{text-align:center;margin-top:10px;}
+.admin-link a{font-size:12px;color:var(--muted);text-decoration:none;}
+.admin-link a:hover{color:var(--green);}
+.cc-alert{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.cc-alert-danger{background:#fdecea;color:#c0392b;border:1px solid #f5c6c6;}
+.cc-alert-success{background:#e8faf0;color:#1a7a40;border:1px solid #b2dfca;}
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-avatar"><i class="fas fa-hard-hat"></i></div>
+      <h2>Staff Sign In</h2>
+      <p>Access your CityCare field dashboard</p>
+      <span class="staff-tag"><i class="fas fa-shield-alt"></i> Field Staff Portal</span>
+    </div>
+    <div class="login-body">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+        <div class="cc-alert cc-alert-{{ cat }}">
+          <i class="fas fa-{{ 'check-circle' if cat == 'success' else 'exclamation-circle' }}"></i>{{ msg }}
+        </div>
+        {% endfor %}
+      {% endwith %}
+      <form method="POST" action="{{ url_for('staff_login') }}">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-wrap">
+            <i class="fas fa-envelope input-icon"></i>
+            <input type="email" name="email" class="form-control" placeholder="staff@citycare.in" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-wrap">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" name="password" class="form-control" placeholder="Your password" required>
+          </div>
+        </div>
+        <button type="submit" class="login-btn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+      </form>
+      <div class="divider">or</div>
+      <div class="reg-link">New staff member? <a href="{{ url_for('staff_register') }}">Register here</a></div>
+      <div class="admin-link"><a href="{{ url_for('staff_login') }}"><i class="fas fa-user-shield" style="margin-right:4px;"></i>Admin / Citizen login</a></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

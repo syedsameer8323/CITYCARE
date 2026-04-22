@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityCare – Staff Registration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+<style>
+:root{
+  --dark:#0d1f13;--green:#1a4d2e;--mid:#2d6a4f;
+  --accent:#52b788;--light:#d8f3dc;--lighter:#edf7f0;
+  --white:#f8fdf9;--text:#1b2d23;--muted:#5a7a65;--border:#d0e8d8;
+  --font-h:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-b);background:#eef5f0;color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 16px;}
+.reg-card{background:#fff;border-radius:24px;box-shadow:0 16px 64px rgba(13,31,19,0.13);width:100%;max-width:640px;overflow:hidden;}
+.reg-header{background:linear-gradient(135deg,var(--dark) 0%,#163d25 60%,#1e5234 100%);padding:36px 40px 30px;position:relative;overflow:hidden;}
+.reg-header::before{content:'';position:absolute;right:-50px;top:-50px;width:180px;height:180px;border-radius:50%;background:rgba(82,183,136,0.08);}
+.reg-logo{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.reg-logo-icon{width:40px;height:40px;background:var(--accent);border-radius:11px;display:flex;align-items:center;justify-content:center;}
+.reg-logo-icon i{color:var(--dark);font-size:18px;}
+.reg-logo-name{font-family:var(--font-h);font-size:20px;font-weight:800;color:#fff;}
+.reg-logo-name span{color:var(--accent);}
+.reg-header h2{font-family:var(--font-h);font-size:26px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-0.5px;}
+.reg-header p{font-size:14px;color:rgba(255,255,255,0.5);margin:0;}
+.staff-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(82,183,136,0.15);border:1px solid rgba(82,183,136,0.3);color:var(--accent);font-size:11px;font-weight:700;letter-spacing:0.5px;padding:5px 12px;border-radius:50px;margin-top:12px;}
+.reg-body{padding:32px 40px 36px;}
+.form-section{margin-bottom:24px;}
+.form-section-title{font-family:var(--font-h);font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:540px){.form-row{grid-template-columns:1fr;}}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:0.3px;}
+.req{color:#e74c3c;}
+.form-control{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:var(--font-b);color:var(--text);background:var(--white);transition:all 0.2s;}
+.form-control:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(82,183,136,0.12);}
+.form-control::placeholder{color:#a8c4b0;}
+.submit-btn{width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,var(--green) 0%,var(--mid) 100%);color:#fff;border:none;cursor:pointer;font-size:15px;font-weight:600;font-family:var(--font-b);letter-spacing:0.3px;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;}
+.submit-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(26,77,46,0.3);}
+.login-link{text-align:center;font-size:13px;color:var(--muted);margin-top:18px;}
+.login-link a{color:var(--green);font-weight:600;text-decoration:none;}
+.cc-alert{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.cc-alert-danger{background:#fdecea;color:#c0392b;border:1px solid #f5c6c6;}
+.cc-alert-success{background:#e8faf0;color:#1a7a40;border:1px solid #b2dfca;}
+</style>
+</head>
+<body>
+<div class="reg-card">
+  <div class="reg-header">
+    <div class="reg-logo">
+      <div class="reg-logo-icon"><i class="fas fa-recycle"></i></div>
+      <span class="reg-logo-name">CITY<span>CARE</span></span>
+    </div>
+    <h2>Staff Registration</h2>
+    <p>Create your field staff account to receive and manage civic complaints</p>
+    <span class="staff-badge"><i class="fas fa-id-badge"></i> Field Staff Portal</span>
+  </div>
+  <div class="reg-body">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+      <div class="cc-alert cc-alert-{{ cat }}">
+        <i class="fas fa-{{ 'check-circle' if cat == 'success' else 'exclamation-circle' }}"></i>{{ msg }}
+      </div>
+      {% endfor %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('staff_register') }}">
+      <div class="form-section">
+        <div class="form-section-title"><i class="fas fa-user" style="margin-right:6px;"></i>Personal Information</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Full Name <span class="req">*</span></label>
+            <input type="text" name="name" class="form-control" placeholder="e.g. Rajesh Kumar" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Employee ID <span class="req">*</span></label>
+            <input type="text" name="employee_id" class="form-control" placeholder="e.g. CC-2024-001" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Phone Number <span class="req">*</span></label>
+            <input type="tel" name="phone" class="form-control" placeholder="+91 9876543210" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address <span class="req">*</span></label>
+            <input type="email" name="email" class="form-control" placeholder="staff@citycare.in" required>
+          </div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title"><i class="fas fa-briefcase" style="margin-right:6px;"></i>Role & Assignment</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Department <span class="req">*</span></label>
+            <select name="department" class="form-control" required>
+              <option value="">Select department</option>
+              <option value="Sanitation">Sanitation</option>
+              <option value="Waste Management">Waste Management</option>
+              <option value="Public Works">Public Works</option>
+              <option value="Health & Hygiene">Health &amp; Hygiene</option>
+              <option value="Environment">Environment</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Designation <span class="req">*</span></label>
+            <select name="designation" class="form-control" required>
+              <option value="">Select designation</option>
+              <option value="Field Inspector">Field Inspector</option>
+              <option value="Sanitation Worker">Sanitation Worker</option>
+              <option value="Supervisor">Supervisor</option>
+              <option value="Senior Inspector">Senior Inspector</option>
+              <option value="Area Coordinator">Area Coordinator</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Primary Zone / Area <span class="req">*</span></label>
+            <input type="text" name="zone" class="form-control" placeholder="e.g. Banjara Hills, Hyderabad" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notification Preference</label>
+            <select name="notify_pref" class="form-control">
+              <option value="email">Email only</option>
+              <option value="sms">SMS only</option>
+              <option value="both" selected>Email + SMS</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title"><i class="fas fa-lock" style="margin-right:6px;"></i>Account Security</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Password <span class="req">*</span></label>
+            <input type="password" name="password" class="form-control" placeholder="Min. 8 characters" required minlength="8">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password <span class="req">*</span></label>
+            <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required>
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="submit-btn"><i class="fas fa-user-plus"></i> Create Staff Account</button>
+    </form>
+    <div class="login-link">Already have an account? <a href="{{ url_for('staff_login') }}">Sign in here</a></div>
+  </div>
+</div>
+<script>
+document.querySelector('form').addEventListener('submit',function(e){
+  const p1=document.querySelector('[name=password]').value;
+  const p2=document.querySelector('[name=confirm_password]').value;
+  if(p1!==p2){e.preventDefault();alert('Passwords do not match!');}
+});
+</script>
+</body>
+</html>
