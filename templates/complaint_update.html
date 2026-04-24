@@ -86,22 +86,46 @@ body{font-family:var(--font-body);background:#f0f6f2;color:var(--cc-text);}
           <div class="cc-field">
             <label>Category</label>
             <select name="category" required>
-              <option value="">Select category</option>
-              {% for opt in ['Organic','Hazardous','Liquid','Domestic','All'] %}
-              <option value="{{ opt }}" {% if category==opt %}selected{% endif %}>{{ opt }}</option>
-              {% endfor %}
-            </select>
+            <option value="Organic" {% if category=='Organic' %}selected{% endif %}>Organic Waste</option>
+            <option value="Hazardous" {% if category=='Hazardous' %}selected{% endif %}>Hazardous / Chemical Waste</option>
+            <option value="Liquid" {% if category=='Liquid' %}selected{% endif %}>Liquid Waste</option>
+            <option value="Domestic" {% if category=='Domestic' %}selected{% endif %}>Domestic Waste</option>
+            <option value="Mixed" {% if category=='Mixed' %}selected{% endif %}>Mixed Waste</option>
+
+            <option value="Garbage Overflow" {% if category=='Garbage Overflow' %}selected{% endif %}>Garbage Overflow</option>
+            <option value="Uncollected Waste" {% if category=='Uncollected Waste' %}selected{% endif %}>Uncollected Waste</option>
+            <option value="Streetlight Issue" {% if category=='Streetlight Issue' %}selected{% endif %}>Streetlight Not Working</option>
+            <option value="Water Leakage" {% if category=='Water Leakage' %}selected{% endif %}>Water Leakage</option>
+            <option value="Road Damage" {% if category=='Road Damage' %}selected{% endif %}>Road Damage / Potholes</option>
+            <option value="Drainage Issue" {% if category=='Drainage Issue' %}selected{% endif %}>Drainage Blockage</option>
+            <option value="Public Toilet Issue" {% if category=='Public Toilet Issue' %}selected{% endif %}>Public Toilet Issue</option>
+            <option value="Illegal Dumping" {% if category=='Illegal Dumping' %}selected{% endif %}>Illegal Dumping</option>
+            <option value="Dead Animal" {% if category=='Dead Animal' %}selected{% endif %}>Dead Animal Removal</option>
+          </select>
           </div>
 
           <div class="cc-field">
-            <label>Location / Area</label>
-            <select name="location" required>
-              <option value="">Select area</option>
-              {% for loc in ['Mailoor','Chideri','Old City','New City','Chitta','Vidya Nagar','Adarsh Colony','Gumpa','Kukatpally','Dilsukhnagar'] %}
-              <option value="{{ loc }}" {% if location==loc %}selected{% endif %}>{{ loc }}</option>
-              {% endfor %}
-            </select>
-          </div>
+          <label>Location / Area</label>
+
+          <input list="area_list"
+                name="location"
+                value="{{ location }}"
+                placeholder="Select or type your area"
+                required>
+
+          <datalist id="area_list">
+            <option value="Banjara Hills">
+            <option value="Jubilee Hills">
+            <option value="Madhapur">
+            <option value="Gachibowli">
+            <option value="Kukatpally">
+            <option value="Dilsukhnagar">
+            <option value="Secunderabad">
+            <option value="Ameerpet">
+            <option value="Mehdipatnam">
+            <option value="LB Nagar">
+          </datalist>
+        </div>
         </div>
 
         <!-- SEVERITY -->

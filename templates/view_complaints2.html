@@ -169,62 +169,83 @@ body{font-family:var(--font-body);background:#f0f6f2;color:var(--cc-text);}
               </tr>
             </thead>
             <tbody>
-              {% for row in rawdata %}
-              {# 0=id,1=name,2=userid,3=phone,4=category,5=location,
-                 6=address,7=image,8=status,9=severity,10=priority_score,
-                 11=assigned_staff,12=created_at #}
-              <tr data-status="{{ row[8].lower() if row[8] else '' }}"
-                  data-sev="{{ row[9].lower() if row[9] else 'medium' }}"
-                  data-search="{{ (row[1]~row[5]~row[4]).lower() }}">
-                <td><b>#{{ row[0] }}</b></td>
-                <td>
-                  <div style="font-weight:600;">{{ row[1] }}</div>
-                  <div style="font-size:11px;color:var(--cc-muted);">{{ row[2] }}</div>
-                </td>
-                <td>{{ row[4] }}</td>
-                <td><i class="fas fa-map-marker-alt" style="color:var(--cc-accent);font-size:10px;margin-right:3px;"></i>{{ row[5] }}</td>
-                <td>
-                  {% set sev = row[9] if row[9] else 'Medium' %}
-                  <span class="sev-badge sev-{{ sev.lower() }}">{{ sev }}</span>
-                </td>
-                <td>
-                  <div class="score-bar-wrap">
-                    <div class="score-bar">
-                      <div class="score-bar-fill" style="width:{{ [((row[10] or 0)/20*100)|int,100]|min }}%;"></div>
-                    </div>
-                    <span class="score-num">{{ row[10] or 0 }}</span>
+            {% for row in rawdata %}
+
+            <tr 
+              data-status="{{ row.status.lower() if row.status else '' }}"
+              data-sev="{{ row.severity.lower() if row.severity else 'medium' }}"
+              data-search="{{ (row.user_name ~ row.location ~ row.category).lower() }}"
+            >
+
+              <td><b>#{{ row.complaint_id }}</b></td>
+
+              <td>
+                <div style="font-weight:600;">{{ row.user_name }}</div>
+                <div style="font-size:11px;color:var(--cc-muted);">{{ row.userid }}</div>
+              </td>
+
+              <td>{{ row.category }}</td>
+
+              <td>
+                <i class="fas fa-map-marker-alt" style="color:var(--cc-accent);font-size:10px;margin-right:3px;"></i>
+                {{ row.location }}
+              </td>
+
+              <td>
+                {% set sev = row.severity if row.severity else 'Medium' %}
+                <span class="sev-badge sev-{{ sev.lower() }}">{{ sev }}</span>
+              </td>
+
+              <td>
+                <div class="score-bar-wrap">
+                  <div class="score-bar">
+                    <div class="score-bar-fill" style="width:{{ [((row.priority_score or 0)/20*100)|int,100]|min }}%;"></div>
                   </div>
-                </td>
-                <td>
-                  {% if row[11] %}
-                  <span style="font-size:12px;"><i class="fas fa-user" style="color:var(--cc-muted);font-size:10px;margin-right:3px;"></i>{{ row[11] }}</span>
-                  {% else %}
+                  <span class="score-num">{{ row.priority_score or 0 }}</span>
+                </div>
+              </td>
+
+              <td>
+                {% if row.assigned_staff %}
+                  <span style="font-size:12px;">
+                    <i class="fas fa-user" style="color:var(--cc-muted);font-size:10px;margin-right:3px;"></i>
+                    {{ row.assigned_staff }}
+                  </span>
+                {% else %}
                   <span style="color:var(--cc-muted);font-size:12px;">Unassigned</span>
+                {% endif %}
+              </td>
+
+              <td>
+                {% set st = row.status.lower() if row.status else 'pending' %}
+                <span class="status-badge status-{{ st }}">
+                  {{ row.status | capitalize }}
+                </span>
+              </td>
+
+              <td style="font-size:11px;color:var(--cc-muted);">
+                {{ row.created_at.strftime('%d %b %Y') if row.created_at else '—' }}
+              </td>
+
+              <td>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                  <a href="/update_status/{{ row.complaint_id }}" class="act-btn act-manage">
+                    <i class="fas fa-edit"></i> Manage
+                  </a>
+
+                  {% if not row.assigned_staff %}
+                  <a href="/auto_assign/{{ row.complaint_id }}" class="act-btn act-assign"
+                    title="Auto-assign best available staff">
+                    <i class="fas fa-user-plus"></i> Assign
+                  </a>
                   {% endif %}
-                </td>
-                <td>
-                  {% set st = row[8].lower() if row[8] else 'pending' %}
-                  <span class="status-badge status-{{ st }}">{{ row[8] | capitalize }}</span>
-                </td>
-                <td style="font-size:11px;color:var(--cc-muted);">
-                  {{ row[12].strftime('%d %b %Y') if row[12] else '—' }}
-                </td>
-                <td>
-                  <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                    <a href="/update_status/{{ row[0] }}" class="act-btn act-manage">
-                      <i class="fas fa-edit"></i> Manage
-                    </a>
-                    {% if not row[11] %}
-                    <a href="/auto_assign/{{ row[0] }}" class="act-btn act-assign"
-                       title="Auto-assign best available staff">
-                      <i class="fas fa-user-plus"></i> Assign
-                    </a>
-                    {% endif %}
-                  </div>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
+                </div>
+              </td>
+
+            </tr>
+
+            {% endfor %}
+          </tbody>
           </table>
         </div>
         {% else %}

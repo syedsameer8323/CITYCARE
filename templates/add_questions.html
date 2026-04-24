@@ -200,22 +200,22 @@ body{font-family:var(--font-b);background:#f0f6f2;color:var(--text);}
             {% if all_qa %}
             <div id="qaList">
               {% for qa in all_qa %}
-              <div class="qa-item" data-q="{{ qa[1].lower() }}" data-a="{{ qa[2].lower() }}">
-                <div class="qa-q">
-                  <i class="fas fa-question-circle"></i>
-                  {{ qa[1] }}
-                </div>
-                <div class="qa-a">{{ qa[2] }}</div>
-                <div class="qa-actions">
-                  <a href="/edit_question/{{ qa[0] }}" class="act-btn act-edit">
-                    <i class="fas fa-edit"></i> Edit
-                  </a>
-                  <a href="/delete_question/{{ qa[0] }}" class="act-btn act-delete"
-                     onclick="return confirm('Delete this entry?')">
-                    <i class="fas fa-trash"></i> Delete
-                  </a>
-                </div>
+              <div class="qa-item" data-q="{{ qa.question.lower() }}" data-a="{{ qa.answer.lower() }}">
+              <div class="qa-q">
+                <i class="fas fa-question-circle"></i>
+                {{ qa.question }}
               </div>
+              <div class="qa-a">{{ qa.answer }}</div>
+              <div class="qa-actions">
+                <a href="/edit_question/{{ qa.qid }}" class="act-btn act-edit">
+                  <i class="fas fa-edit"></i> Edit
+                </a>
+                <a href="/delete_question/{{ qa.qid }}" class="act-btn act-delete"
+                  onclick="return confirm('Delete this entry?')">
+                  <i class="fas fa-trash"></i> Delete
+                </a>
+              </div>
+            </div>
               {% endfor %}
             </div>
             <div id="noResults" style="display:none;" class="empty-state">

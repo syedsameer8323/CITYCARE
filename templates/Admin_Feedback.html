@@ -98,7 +98,7 @@ body{font-family:var(--font-b);background:#f0f6f2;color:var(--text);}
         </div>
         <div class="fb-stat">
           <div class="fb-stat-num" style="color:var(--accent);">
-            {{ feedbacks | selectattr('3', 'ge', 4) | list | length if feedbacks else 0 }}
+            {{ feedbacks | selectattr('rating', 'ge', 4) | list | length if feedbacks else 0 }}
           </div>
           <div class="fb-stat-label">Positive (4–5 stars)</div>
         </div>
@@ -111,27 +111,30 @@ body{font-family:var(--font-b);background:#f0f6f2;color:var(--text);}
         <div class="fb-card">
           <div class="fb-card-header">
             <div>
-              <div class="fb-card-id">Complaint #{{ fb[1] }} · {{ fb[2] }}</div>
+              <div class="fb-card-id">Complaint #{{ fb.complaint_id }} · {{ fb.userid }}</div>
             </div>
-            <div class="fb-card-meta">{{ fb[5].strftime('%d %b %Y') if fb[5] else '' }}</div>
+            <div class="fb-card-meta">{{ fb.submitted_at.strftime('%d %b %Y') if fb.submitted_at else '' }}</div>
           </div>
 
           <div class="fb-stars">
             {% for i in range(1,6) %}
-              {% if i <= fb[3] %}<span>&#9733;</span>{% else %}<span class="empty">&#9733;</span>{% endif %}
+              {% if i <= fb.rating %}<span>&#9733;</span>
+              {% else %}
+                <span class="empty">&#9733;</span>
+              {% endif %}
             {% endfor %}
-            <span style="font-size:13px;color:var(--muted);margin-left:6px;font-family:var(--font-b);">{{ fb[3] }}/5</span>
+            <span style="font-size:13px;color:var(--muted);margin-left:6px;font-family:var(--font-b);">{{ fb.rating }}/5</span>
           </div>
 
-          {% if fb[4] %}
-          <div class="fb-comment">"{{ fb[4] }}"</div>
+          {% if fb.comment %}
+          <div class="fb-comment">"{{ fb.comment }}"</div>
           {% else %}
           <div style="font-size:13px;color:var(--muted);font-style:italic;">No comment left.</div>
           {% endif %}
 
           <div class="fb-complaint-info">
-            <span class="info-chip"><i class="fas fa-tag"></i> {{ fb[6] }}</span>
-            <span class="info-chip"><i class="fas fa-map-marker-alt"></i> {{ fb[7] }}</span>
+            <span class="info-chip"><i class="fas fa-tag"></i> {{ fb.category }}</span>
+            <span class="info-chip"><i class="fas fa-map-marker-alt"></i> {{ fb.location }}</span>
           </div>
         </div>
         {% endfor %}

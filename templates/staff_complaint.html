@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CityCare – Manage Complaint #{{ complaint.id }}</title>
+<title>CityCare – Manage Complaint #{{ complaint['complaint_id'] }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
@@ -17,291 +17,388 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--font-b);background:#eef5f0;color:var(--text);}
-.page-banner{background:linear-gradient(135deg,var(--dark) 0%,#163d25 100%);padding:24px 0 20px;position:relative;overflow:hidden;}
+
+/* ── BANNER ── */
+.page-banner{
+  background:linear-gradient(135deg,var(--dark) 0%,#163d25 100%);
+  padding:22px 0 18px;position:relative;overflow:hidden;
+}
 .page-banner::before{content:'';position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:rgba(82,183,136,0.07);}
+.banner-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.banner-left{}
 .banner-title{font-family:var(--font-h);font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;}
-.breadcrumb{display:flex;align-items:center;gap:8px;list-style:none;font-size:12px;color:rgba(255,255,255,0.5);padding:0;margin:0;}
+.breadcrumb{display:flex;align-items:center;gap:6px;list-style:none;font-size:12px;color:rgba(255,255,255,0.5);padding:0;margin:0;}
 .breadcrumb a{color:var(--accent);text-decoration:none;}
-.breadcrumb li::after{content:'/';margin-left:8px;}
+.breadcrumb li::after{content:'/';margin-left:6px;}
 .breadcrumb li:last-child::after{display:none;}
 .breadcrumb li:last-child{color:rgba(255,255,255,0.9);}
-.main-content{padding:32px 0 80px;}
-.layout{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;}
-@media(max-width:900px){.layout{grid-template-columns:1fr;}}
-/* Cards */
+.banner-actions{display:flex;gap:8px;flex-shrink:0;}
+.banner-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;font-size:12px;font-weight:600;text-decoration:none;transition:all 0.2s;border:none;cursor:pointer;font-family:var(--font-b);}
+.banner-btn-outline{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.8);border:1px solid rgba(255,255,255,0.15);}
+.banner-btn-outline:hover{background:rgba(255,255,255,0.15);color:#fff;}
+.banner-btn-accent{background:var(--accent);color:var(--dark);}
+.banner-btn-accent:hover{background:#40916c;color:#fff;}
+
+/* ── LAYOUT ── */
+.main-content{padding:28px 0 80px;}
+.two-col{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start;}
+@media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+
+/* ── CARDS ── */
 .card{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:18px;}
-.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
-.card-header h4{font-family:var(--font-h);font-size:14px;font-weight:700;margin:0;}
-.card-header i{color:var(--accent);}
+.card:last-child{margin-bottom:0;}
+.card-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:#fafcfb;}
+.card-header h4{font-family:var(--font-h);font-size:13px;font-weight:700;margin:0;color:var(--text);}
+.card-header i{color:var(--accent);font-size:13px;}
 .card-body{padding:20px;}
-/* Complaint info */
-.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.info-item{}
-.info-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
-.info-value{font-size:14px;font-weight:500;}
-.sev-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:50px;font-size:11px;font-weight:700;}
+
+/* ── COMPLAINT INFO GRID ── */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;}
+.info-item .info-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:4px;}
+.info-item .info-value{font-size:14px;font-weight:500;color:var(--text);line-height:1.5;}
+.full-width{grid-column:1 / -1;}
+
+/* ── PRIORITY BAR ── */
+.priority-pill{display:inline-flex;align-items:center;gap:6px;background:var(--lighter);border:1px solid var(--border);padding:5px 14px;border-radius:50px;font-size:13px;font-weight:700;color:var(--green);margin-top:10px;}
+.score-track{height:8px;border-radius:4px;background:var(--border);margin-top:8px;}
+.score-fill{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--green));}
+
+/* ── BADGES ── */
+.sev-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;}
 .sev-badge::before{content:'';width:6px;height:6px;border-radius:50%;}
 .sev-critical{background:#fdecea;color:#c0392b;}.sev-critical::before{background:#e74c3c;}
 .sev-high{background:#fef0e0;color:#a04010;}.sev-high::before{background:#e67e22;}
 .sev-medium{background:#fef9e7;color:#9a6000;}.sev-medium::before{background:#f39c12;}
 .sev-low{background:#e8faf0;color:#1a7a40;}.sev-low::before{background:#2ecc71;}
-.status-badge{padding:4px 12px;border-radius:50px;font-size:12px;font-weight:700;}
+.status-badge{display:inline-block;padding:4px 12px;border-radius:50px;font-size:11px;font-weight:700;}
 .status-pending{background:#fff3e0;color:#e67e22;}
 .status-resolved{background:#e8faf0;color:#1a7a40;}
-.status-inprogress{background:#e3f0ff;color:#1a6ebf;}
-/* Form elements */
+.status-in-progress,.status-inprogress{background:#e3f0ff;color:#1a6ebf;}
+
+/* ── FORM ── */
 .form-group{margin-bottom:16px;}
-.form-label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:0.3px;}
-.form-control{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:var(--font-b);color:var(--text);background:var(--white);transition:all 0.2s;}
+.form-label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:0.4px;text-transform:uppercase;}
+.form-control{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:var(--font-b);color:var(--text);background:var(--white);transition:all 0.2s;}
 .form-control:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(82,183,136,0.12);}
-textarea.form-control{resize:vertical;min-height:90px;}
-/* Photo upload */
-.photo-upload-zone{border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;background:var(--lighter);cursor:pointer;transition:all 0.2s;position:relative;}
+textarea.form-control{resize:vertical;min-height:88px;line-height:1.55;}
+
+/* ── PHOTO UPLOAD ── */
+.photo-upload-zone{
+  border:2px dashed var(--border);border-radius:12px;
+  padding:20px;text-align:center;background:var(--lighter);
+  cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;
+}
 .photo-upload-zone:hover{border-color:var(--accent);background:var(--light);}
-.photo-upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.photo-upload-zone i{font-size:28px;color:var(--muted);margin-bottom:8px;display:block;}
-.photo-upload-zone p{font-size:13px;color:var(--muted);margin:0;}
-.photo-upload-zone span{font-size:11px;color:var(--accent);font-weight:600;}
-.photo-previews{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;}
-.photo-thumb{border-radius:10px;overflow:hidden;aspect-ratio:1;position:relative;border:1px solid var(--border);}
+.photo-upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.photo-upload-zone .upload-icon{font-size:26px;color:var(--muted);margin-bottom:6px;display:block;}
+.photo-upload-zone .upload-title{font-size:13px;font-weight:600;color:var(--text);margin:0 0 2px;}
+.photo-upload-zone .upload-hint{font-size:11px;color:var(--accent);font-weight:600;}
+.photo-previews{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
+.photo-thumb{border-radius:9px;overflow:hidden;aspect-ratio:1;position:relative;border:1px solid var(--border);}
 .photo-thumb img{width:100%;height:100%;object-fit:cover;}
-.photo-thumb .remove-photo{position:absolute;top:5px;right:5px;width:22px;height:22px;background:#e74c3c;color:#fff;border-radius:50%;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;}
-/* Existing photos */
+.photo-thumb .remove-photo{position:absolute;top:4px;right:4px;width:20px;height:20px;background:#e74c3c;color:#fff;border-radius:50%;border:none;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;}
+
+/* ── EXISTING PHOTOS ── */
 .photos-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
 .photo-card{border-radius:10px;overflow:hidden;position:relative;border:1px solid var(--border);}
-.photo-card img{width:100%;height:140px;object-fit:cover;display:block;}
-.photo-tag{position:absolute;bottom:0;left:0;right:0;background:rgba(13,31,19,0.75);color:#fff;font-size:11px;font-weight:600;padding:5px 10px;display:flex;align-items:center;gap:5px;}
+.photo-card img{width:100%;height:130px;object-fit:cover;display:block;}
+.photo-tag{position:absolute;bottom:0;left:0;right:0;background:rgba(13,31,19,0.78);color:#fff;font-size:10px;font-weight:700;padding:5px 9px;display:flex;align-items:center;gap:5px;}
 .photo-tag.before-tag{border-left:3px solid #e67e22;}
 .photo-tag.after-tag{border-left:3px solid var(--accent);}
-/* Activity timeline */
-.timeline{padding:4px 0;}
-.tl-item{display:flex;gap:14px;padding:12px 0;position:relative;}
-.tl-item::before{content:'';position:absolute;left:15px;top:28px;bottom:-12px;width:1px;background:var(--border);}
+
+/* ── TIMELINE ── */
+.timeline{}
+.tl-item{display:flex;gap:12px;padding:10px 0;position:relative;}
+.tl-item::before{content:'';position:absolute;left:13px;top:26px;bottom:-10px;width:1px;background:var(--border);}
 .tl-item:last-child::before{display:none;}
-.tl-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;}
-.tl-dot-green{background:var(--light);color:var(--green);}
-.tl-dot-blue{background:#e3f0ff;color:#1a6ebf;}
-.tl-dot-orange{background:#fef0e0;color:#e67e22;}
-.tl-text{flex:1;}
+.tl-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;}
+.tl-green{background:var(--light);color:var(--green);}
+.tl-blue{background:#e3f0ff;color:#1a6ebf;}
+.tl-orange{background:#fef0e0;color:#e67e22;}
+.tl-text{flex:1;padding-top:2px;}
 .tl-action{font-size:13px;font-weight:600;margin-bottom:2px;}
-.tl-meta{font-size:11px;color:var(--muted);}
-/* Submit btn */
-.submit-btn{width:100%;padding:13px;border-radius:12px;background:linear-gradient(135deg,var(--green) 0%,var(--mid) 100%);color:#fff;border:none;cursor:pointer;font-size:14px;font-weight:600;font-family:var(--font-b);transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
-.submit-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(26,77,46,0.3);}
-.secondary-btn{width:100%;padding:11px;border-radius:12px;background:var(--lighter);color:var(--green);border:1.5px solid var(--border);cursor:pointer;font-size:14px;font-weight:600;font-family:var(--font-b);transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:8px;}
-.secondary-btn:hover{border-color:var(--accent);background:var(--light);color:var(--green);}
-.cc-alert{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.tl-meta{font-size:11px;color:var(--muted);line-height:1.4;}
+
+/* ── BUTTONS ── */
+.btn-primary{width:100%;padding:12px;border-radius:11px;background:linear-gradient(135deg,var(--green) 0%,var(--mid) 100%);color:#fff;border:none;cursor:pointer;font-size:14px;font-weight:600;font-family:var(--font-b);transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(26,77,46,0.28);}
+.btn-primary:active{transform:translateY(0);}
+.btn-resolve{background:linear-gradient(135deg,#1a7a40,#27ae60);}
+.btn-outline{width:100%;padding:10px;border-radius:11px;background:var(--lighter);color:var(--green);border:1.5px solid var(--border);cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font-b);transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;margin-top:8px;}
+.btn-outline:hover{border-color:var(--accent);background:var(--light);color:var(--green);}
+
+/* ── CITIZEN CARD ── */
+.citizen-row{display:flex;align-items:center;gap:12px;padding:8px 0;}
+.citizen-avatar{width:40px;height:40px;border-radius:11px;background:var(--light);color:var(--green);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-h);}
+.citizen-name{font-size:14px;font-weight:600;}
+.citizen-meta{font-size:12px;color:var(--muted);}
+
+/* ── ALERTS ── */
+.cc-alert{padding:11px 15px;border-radius:10px;font-size:13px;margin-bottom:16px;display:flex;align-items:center;gap:9px;}
 .cc-alert-success{background:#e8faf0;color:#1a7a40;border:1px solid #b2dfca;}
 .cc-alert-danger{background:#fdecea;color:#c0392b;border:1px solid #f5c6c6;}
-/* Priority score pill */
-.priority-pill{display:inline-flex;align-items:center;gap:6px;background:var(--lighter);border:1px solid var(--border);padding:6px 14px;border-radius:50px;font-size:13px;font-weight:700;color:var(--green);}
-.score-bar-w{height:8px;border-radius:4px;background:var(--border);margin-top:8px;}
-.score-bar-f{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--green));}
+
+/* ── STATUS SECTION ── */
+.status-section{background:var(--lighter);border-radius:12px;padding:14px;margin-bottom:16px;border:1px solid var(--border);}
+.status-section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;}
+.status-options{display:flex;gap:8px;}
+.status-opt{flex:1;padding:8px 6px;border-radius:9px;border:1.5px solid var(--border);background:#fff;text-align:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);transition:all 0.2s;}
+.status-opt:hover{border-color:var(--accent);}
+.status-opt.active-pending{border-color:#e67e22;background:#fff3e0;color:#e67e22;}
+.status-opt.active-inprogress{border-color:#1a6ebf;background:#e3f0ff;color:#1a6ebf;}
+.status-opt.active-resolved{border-color:var(--accent);background:var(--light);color:var(--green);}
 </style>
 </head>
 <body>
 
+<!-- BANNER -->
 <div class="page-banner">
   <div class="container">
-    <div class="banner-title">Complaint #{{ complaint.id }}</div>
-    <ul class="breadcrumb">
-      <li><a href="{{ url_for('staff_home') }}">Dashboard</a></li>
-      <li><a href="{{ url_for('staff_complaints') }}">My Complaints</a></li>
-      <li>Manage #{{ complaint.id }}</li>
-    </ul>
+    <div class="banner-inner">
+      <div class="banner-left">
+        <div class="banner-title">
+          <i class="fas fa-clipboard-list" style="color:var(--accent);font-size:18px;margin-right:8px;"></i>
+          Complaint #{{ complaint['complaint_id'] }}
+        </div>
+        <ul class="breadcrumb">
+          <li><a href="{{ url_for('staff_home') }}"><i class="fas fa-home" style="font-size:10px;"></i> Dashboard</a></li>
+          <li><a href="{{ url_for('staff_complaints') }}">My Complaints</a></li>
+          <li>Manage #{{ complaint['complaint_id'] }}</li>
+        </ul>
+      </div>
+      <div class="banner-actions">
+        <a href="{{ url_for('staff_complaints') }}" class="banner-btn banner-btn-outline">
+          <i class="fas fa-arrow-left"></i> Back
+        </a>
+        <a href="{{ url_for('staff_home') }}" class="banner-btn banner-btn-outline">
+          <i class="fas fa-th-large"></i> Dashboard
+        </a>
+        {% if complaint['status'] != 'Resolved' %}
+        <form method="POST" action="{{ url_for('staff_update_complaint', complaint_id=complaint['complaint_id']) }}" style="display:inline;">
+          <input type="hidden" name="status" value="Resolved">
+          <input type="hidden" name="notes" value="Marked resolved by assigned staff.">
+          <button type="submit" class="banner-btn banner-btn-accent">
+            <i class="fas fa-check-double"></i> Mark Resolved
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- MAIN -->
 <div class="main-content">
   <div class="container">
+
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for cat, msg in messages %}
-      <div class="cc-alert cc-alert-{{ cat }}" style="margin-bottom:16px;">
+      <div class="cc-alert cc-alert-{{ cat }}">
         <i class="fas fa-{{ 'check-circle' if cat == 'success' else 'exclamation-circle' }}"></i>{{ msg }}
       </div>
       {% endfor %}
     {% endwith %}
 
-    <div class="layout">
-      <!-- LEFT COLUMN -->
+    <div class="two-col">
+
+      <!-- ══ LEFT COLUMN ══ -->
       <div>
+
         <!-- Complaint Details -->
         <div class="card">
           <div class="card-header">
             <i class="fas fa-info-circle"></i>
             <h4>Complaint Details</h4>
-            {% set sev = complaint.severity if complaint.severity else 'Medium' %}
+            {% set sev = complaint['severity'] if complaint['severity'] else 'Medium' %}
             <span class="sev-badge sev-{{ sev.lower() }}" style="margin-left:auto;">{{ sev }}</span>
           </div>
           <div class="card-body">
             <div class="info-grid">
               <div class="info-item">
                 <div class="info-label">Category</div>
-                <div class="info-value">{{ complaint.category }}</div>
+                <div class="info-value">{{ complaint['category'] or '—' }}</div>
               </div>
               <div class="info-item">
                 <div class="info-label">Status</div>
                 <div class="info-value">
-                  <span class="status-badge status-{{ (complaint.status or 'pending').lower().replace(' ','') }}">
-                    {{ complaint.status or 'Pending' }}
-                  </span>
+                  {% set st = (complaint['status'] or 'pending').lower().replace(' ','-') %}
+                  <span class="status-badge status-{{ st }}">{{ complaint['status'] or 'Pending' }}</span>
                 </div>
               </div>
-              <div class="info-item" style="grid-column:1/-1;">
+              <div class="info-item full-width">
                 <div class="info-label">Location</div>
-                <div class="info-value"><i class="fas fa-map-marker-alt" style="color:var(--accent);margin-right:5px;"></i>{{ complaint.location }}</div>
+                <div class="info-value">
+                  <i class="fas fa-map-marker-alt" style="color:var(--accent);margin-right:5px;font-size:12px;"></i>
+                  {{ complaint['location'] or '—' }}
+                </div>
               </div>
-              <div class="info-item" style="grid-column:1/-1;">
-                <div class="info-label">Description</div>
-                <div class="info-value" style="line-height:1.6;">{{ complaint.description }}</div>
+              <div class="info-item full-width">
+                <div class="info-label">Address / Description</div>
+                <div class="info-value" style="line-height:1.6;">{{ complaint['adddress'] or '—' }}</div>
               </div>
               <div class="info-item">
                 <div class="info-label">Submitted By</div>
-                <div class="info-value">{{ complaint.user_name }}</div>
+                <div class="info-value">{{ complaint['user_name'] or '—' }}</div>
               </div>
               <div class="info-item">
                 <div class="info-label">Submitted On</div>
-                <div class="info-value">{{ complaint.created_at.strftime('%d %b %Y, %I:%M %p') if complaint.created_at else '—' }}</div>
+                <div class="info-value">
+                  {{ complaint['created_at'].strftime('%d %b %Y, %I:%M %p') if complaint['created_at'] else '—' }}
+                </div>
               </div>
             </div>
-            <div class="info-label" style="margin-top:14px;">Priority Score</div>
-            <div class="priority-pill"><i class="fas fa-tachometer-alt"></i> {{ complaint.priority_score or 0 }} / 20</div>
-            <div class="score-bar-w"><div class="score-bar-f" style="width:{{ [((complaint.priority_score or 0)/20*100)|int, 100]|min }}%;"></div></div>
+            <div class="info-label" style="margin-top:16px;margin-bottom:6px;">Priority Score</div>
+            <div class="priority-pill">
+              <i class="fas fa-tachometer-alt"></i>
+              {{ complaint['priority_score'] or 0 }} / 20
+            </div>
+            <div class="score-track" style="margin-top:8px;">
+              <div class="score-fill"
+                   style="width:{{ [[((complaint['priority_score'] or 0) / 20 * 100)|int, 100]|min, 0]|max }}%;">
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Update Status Form -->
+        <!-- Update Form -->
         <div class="card">
-        <div class="card-header">
+          <div class="card-header">
             <i class="fas fa-edit"></i>
             <h4>Update Complaint</h4>
-        </div>
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('staff_update_complaint', complaint_id=complaint.complaint_id) }}" enctype="multipart/form-data">
-            
-            <div class="form-group">
-                <label class="form-label">Update Status</label>
-                <select name="status" class="form-control" required>
-                <option value="Pending" {% if complaint.status == 'Pending' %}selected{% endif %}>Pending</option>
-                <option value="In Progress" {% if complaint.status == 'In Progress' %}selected{% endif %}>In Progress</option>
-                <option value="Resolved" {% if complaint.status == 'Resolved' %}selected{% endif %}>Resolved</option>
-                </select>
-            </div>
+          </div>
+          <div class="card-body">
+            <form method="POST"
+                  action="{{ url_for('staff_update_complaint', complaint_id=complaint['complaint_id']) }}"
+                  enctype="multipart/form-data">
 
-            <div class="form-group">
-                <label class="form-label">Work Notes / Remarks <span style="color:var(--accent);">*</span></label>
+              <!-- Visual status picker -->
+              <div class="status-section">
+                <div class="status-section-title">Set Status</div>
+                <div class="status-options">
+                  <label class="status-opt {% if complaint['status'] == 'Pending' %}active-pending{% endif %}"
+                         onclick="setStatus('Pending',this)">
+                    <i class="fas fa-clock" style="display:block;margin-bottom:3px;font-size:14px;"></i>
+                    Pending
+                  </label>
+                  <label class="status-opt {% if complaint['status'] == 'In Progress' %}active-inprogress{% endif %}"
+                         onclick="setStatus('In Progress',this)">
+                    <i class="fas fa-wrench" style="display:block;margin-bottom:3px;font-size:14px;"></i>
+                    In Progress
+                  </label>
+                  <label class="status-opt {% if complaint['status'] == 'Resolved' %}active-resolved{% endif %}"
+                         onclick="setStatus('Resolved',this)">
+                    <i class="fas fa-check-double" style="display:block;margin-bottom:3px;font-size:14px;"></i>
+                    Resolved
+                  </label>
+                </div>
+                <input type="hidden" name="status" id="statusInput"
+                       value="{{ complaint['status'] or 'Pending' }}">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Work Notes / Remarks <span style="color:#e74c3c;">*</span></label>
                 <textarea name="notes" class="form-control" rows="4"
-                placeholder="Describe the action taken, materials used, observations…" required></textarea>
-            </div>
+                  placeholder="Describe action taken, materials used, observations, next steps…"
+                  required></textarea>
+              </div>
 
-            <div class="form-group">
-                <label class="form-label">Upload Before Photos</label>
-                <div class="photo-upload-zone" id="beforeZone">
-                <input type="file" name="before_photos" multiple accept="image/*" id="beforeInput">
-                <i class="fas fa-camera"></i>
-                <p>Click to upload BEFORE photos</p>
-                <span>JPG, PNG · Max 5MB each · Up to 5 photos</span>
+              <!-- Photo uploads side by side -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label">Before Photos</label>
+                  <div class="photo-upload-zone">
+                    <input type="file" name="before_photos" multiple accept="image/*" id="beforeInput">
+                    <i class="fas fa-camera upload-icon"></i>
+                    <div class="upload-title">Before</div>
+                    <div class="upload-hint">Up to 5 photos</div>
+                  </div>
+                  <div class="photo-previews" id="beforePreviews"></div>
                 </div>
-                <div class="photo-previews" id="beforePreviews"></div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Upload After Photos</label>
-                <div class="photo-upload-zone" id="afterZone">
-                <input type="file" name="after_photos" multiple accept="image/*" id="afterInput">
-                <i class="fas fa-images"></i>
-                <p>Click to upload AFTER photos</p>
-                <span>JPG, PNG · Max 5MB each · Up to 5 photos</span>
+                <div class="form-group">
+                  <label class="form-label">After Photos</label>
+                  <div class="photo-upload-zone">
+                    <input type="file" name="after_photos" multiple accept="image/*" id="afterInput">
+                    <i class="fas fa-images upload-icon"></i>
+                    <div class="upload-title">After</div>
+                    <div class="upload-hint">Up to 5 photos</div>
+                  </div>
+                  <div class="photo-previews" id="afterPreviews"></div>
                 </div>
-                <div class="photo-previews" id="afterPreviews"></div>
-            </div>
+              </div>
 
-            <button type="submit" class="submit-btn">
+              <button type="submit" class="btn-primary">
                 <i class="fas fa-save"></i> Save Update
-            </button>
-
+              </button>
             </form>
-        </div>
+          </div>
         </div>
 
         <!-- Existing Photos -->
         {% if photos %}
         <div class="card">
-        <div class="card-header">
+          <div class="card-header">
             <i class="fas fa-images"></i>
-            <h4>Photo Evidence</h4>
-        </div>
-        <div class="card-body">
+            <h4>Photo Evidence ({{ photos|length }})</h4>
+          </div>
+          <div class="card-body">
             <div class="photos-grid">
-            {% for p in photos %}
-            <div class="photo-card">
-                <img src="{{ url_for('static', filename='pictures/' + p.filename) }}" alt="{{ p.photo_type }}" loading="lazy">
-                <div class="photo-tag {{ 'before-tag' if p.photo_type == 'before' else 'after-tag' }}">
-                <i class="fas fa-{{ 'camera' if p.photo_type == 'before' else 'check-circle' }}"></i>
-                {{ p.photo_type.upper() }} · {{ p.uploaded_at.strftime('%d %b %Y') if p.uploaded_at else '' }}
+              {% for p in photos %}
+              <div class="photo-card">
+                <img src="{{ url_for('static', filename='pictures/' + p['filename']) }}"
+                     alt="{{ p['photo_type'] }}" loading="lazy">
+                <div class="photo-tag {{ 'before-tag' if p['photo_type'] == 'before' else 'after-tag' }}">
+                  <i class="fas fa-{{ 'camera' if p['photo_type'] == 'before' else 'check-circle' }}"></i>
+                  {{ p['photo_type'].upper() }}
+                  · {{ p['uploaded_at'].strftime('%d %b %Y') if p['uploaded_at'] else '' }}
                 </div>
+              </div>
+              {% endfor %}
             </div>
-            {% endfor %}
-            </div>
-        </div>
+          </div>
         </div>
         {% endif %}
 
-        <!-- RIGHT SIDEBAR -->
-        <div>
-        <!-- Quick Actions -->
-        <div class="card">
-            <div class="card-header">
-            <i class="fas fa-bolt"></i>
-            <h4>Quick Actions</h4>
-            </div>
+      </div>
+      <!-- ══ END LEFT COLUMN ══ -->
 
-            <div class="card-body">
-            <a href="{{ url_for('staff_home') }}" class="secondary-btn">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
-
-            <a href="{{ url_for('staff_complaints') }}" class="secondary-btn" style="margin-top:8px;">
-                <i class="fas fa-list"></i> All My Complaints
-            </a>
-
-            {% if complaint.status != 'Resolved' %}
-            <form method="POST" action="{{ url_for('staff_update_complaint', complaint_id=complaint.complaint_id) }}" style="margin-top:8px;">
-                <input type="hidden" name="status" value="Resolved">
-                <input type="hidden" name="notes" value="Marked as resolved by assigned staff.">
-
-                <button type="submit" class="submit-btn"
-                style="background:linear-gradient(135deg,#1a7a40,#27ae60);">
-                <i class="fas fa-check-double"></i> Mark Resolved
-                </button>
-            </form>
-            {% endif %}
-
-            </div>
-        </div>
-        </div>
+      <!-- ══ RIGHT SIDEBAR ══ -->
+      <div>
 
         <!-- Activity Log -->
         <div class="card">
-          <div class="card-header"><i class="fas fa-history"></i><h4>Activity Log</h4></div>
-          <div class="card-body" style="padding-top:10px;">
+          <div class="card-header">
+            <i class="fas fa-history"></i>
+            <h4>Activity Log</h4>
+          </div>
+          <div class="card-body" style="padding-top:12px;">
             {% if activity %}
             <div class="timeline">
               {% for a in activity %}
               <div class="tl-item">
-                <div class="tl-dot tl-dot-{{ 'green' if 'resolved' in a.action.lower() else 'blue' if 'progress' in a.action.lower() else 'orange' }}">
-                  <i class="fas fa-{{ 'check' if 'resolved' in a.action.lower() else 'wrench' if 'progress' in a.action.lower() else 'circle' }}"></i>
+                <div class="tl-dot
+                  {{ 'tl-green' if 'resolved' in (a['action'] or '').lower()
+                     else 'tl-blue' if 'progress' in (a['action'] or '').lower()
+                     else 'tl-orange' }}">
+                  <i class="fas fa-{{ 'check' if 'resolved' in (a['action'] or '').lower()
+                                       else 'wrench' if 'progress' in (a['action'] or '').lower()
+                                       else 'circle' }}"></i>
                 </div>
                 <div class="tl-text">
-                  <div class="tl-action">{{ a.action }}</div>
-                  <div class="tl-meta">{{ a.notes[:60] if a.notes else '' }}{% if a.notes and a.notes|length > 60 %}…{% endif %}</div>
-                  <div class="tl-meta" style="margin-top:2px;">{{ a.created_at.strftime('%d %b %Y, %I:%M %p') if a.created_at else '' }}</div>
+                  <div class="tl-action">{{ a['action'] }}</div>
+                  {% if a['notes'] %}
+                  <div class="tl-meta">{{ a['notes'][:70] }}{% if a['notes']|length > 70 %}…{% endif %}</div>
+                  {% endif %}
+                  <div class="tl-meta" style="margin-top:2px;color:#a0b8a8;">
+                    {{ a['created_at'].strftime('%d %b %Y, %I:%M %p') if a['created_at'] else '' }}
+                  </div>
                 </div>
               </div>
               {% endfor %}
             </div>
             {% else %}
-            <p style="font-size:13px;color:var(--muted);text-align:center;padding:16px 0;">No activity yet. Add your first update above.</p>
+            <p style="font-size:13px;color:var(--muted);text-align:center;padding:14px 0;">
+              No activity yet. Add your first update on the left.
+            </p>
             {% endif %}
           </div>
         </div>
@@ -310,42 +407,78 @@ textarea.form-control{resize:vertical;min-height:90px;}
         <div class="card">
           <div class="card-header"><i class="fas fa-user"></i><h4>Citizen</h4></div>
           <div class="card-body">
-            <div class="info-item" style="margin-bottom:10px;">
-              <div class="info-label">Name</div>
-              <div class="info-value">{{ complaint.user_name }}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Contact</div>
-              <div class="info-value">{{ complaint.user_phone or 'Not provided' }}</div>
+            <div class="citizen-row">
+              <div class="citizen-avatar">
+                {{ (complaint['user_name'] or 'U')[:2].upper() }}
+              </div>
+              <div>
+                <div class="citizen-name">{{ complaint['user_name'] or 'Unknown' }}</div>
+                <div class="citizen-meta">
+                  <i class="fas fa-phone" style="font-size:10px;margin-right:3px;"></i>
+                  {{ complaint['user_phone'] or 'Not provided' }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- Quick Navigation -->
+        <div class="card">
+          <div class="card-header"><i class="fas fa-compass"></i><h4>Navigate</h4></div>
+          <div class="card-body">
+            <a href="{{ url_for('staff_home') }}" class="btn-outline">
+              <i class="fas fa-th-large"></i> Dashboard
+            </a>
+            <a href="{{ url_for('staff_complaints') }}" class="btn-outline">
+              <i class="fas fa-clipboard-list"></i> All My Complaints
+            </a>
+            <a href="{{ url_for('staff_notifications') }}" class="btn-outline">
+              <i class="fas fa-bell"></i> Notifications
+            </a>
+          </div>
+        </div>
+
       </div>
+      <!-- ══ END RIGHT SIDEBAR ══ -->
+
     </div>
   </div>
 </div>
 
 <script>
+// ── Status visual picker ──────────────────────────────────────
+function setStatus(val, el){
+  document.getElementById('statusInput').value = val;
+  document.querySelectorAll('.status-opt').forEach(o => {
+    o.classList.remove('active-pending','active-inprogress','active-resolved');
+  });
+  const map = {'Pending':'active-pending','In Progress':'active-inprogress','Resolved':'active-resolved'};
+  el.classList.add(map[val] || '');
+}
+
+// ── Photo previews ────────────────────────────────────────────
 function previewPhotos(inputId, previewId){
-  const input = document.getElementById(inputId);
-  const preview = document.getElementById(previewId);
-  input.addEventListener('change', function(){
+  document.getElementById(inputId).addEventListener('change', function(){
+    const preview = document.getElementById(previewId);
     preview.innerHTML = '';
-    Array.from(this.files).slice(0,5).forEach(file => {
+    Array.from(this.files).slice(0, 5).forEach(file => {
       const reader = new FileReader();
       reader.onload = e => {
         const div = document.createElement('div');
         div.className = 'photo-thumb';
         div.innerHTML = `<img src="${e.target.result}" alt="preview">
-          <button class="remove-photo" type="button" onclick="this.parentNode.remove()"><i class="fas fa-times"></i></button>`;
+          <button class="remove-photo" type="button"
+            onclick="this.parentNode.remove()">
+            <i class="fas fa-times"></i>
+          </button>`;
         preview.appendChild(div);
       };
       reader.readAsDataURL(file);
     });
   });
 }
-previewPhotos('beforeInput','beforePreviews');
-previewPhotos('afterInput','afterPreviews');
+previewPhotos('beforeInput', 'beforePreviews');
+previewPhotos('afterInput',  'afterPreviews');
 </script>
 </body>
 </html>

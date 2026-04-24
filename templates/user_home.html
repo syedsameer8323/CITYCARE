@@ -169,7 +169,7 @@ body{font-family:var(--font-b);background:#f0f6f2;color:var(--text);}
       <!-- WELCOME -->
       <div class="welcome-banner">
         <div class="welcome-text">
-          <h2>Welcome back 👋</h2>
+          <h2>Welcome back ,{{ user_name }}👋</h2>
           <p>Here's a summary of your CityCare complaint activity.</p>
         </div>
         <div class="welcome-actions">
@@ -252,15 +252,20 @@ body{font-family:var(--font-b);background:#f0f6f2;color:var(--text);}
         <div class="latest-row">
           <div class="latest-icon"><i class="fas fa-trash-alt"></i></div>
           <div class="latest-info">
-            <h5>{{ latest[0] }} — {{ latest[1] }}</h5>
-            <p>Submitted {{ latest[4].strftime('%d %b %Y') if latest[4] else '' }}</p>
+            <h5>{{ latest['category'] }} — {{ latest['location'] }}</h5>
+            <p>Submitted 
+              {{ latest['created_at'].strftime('%d %b %Y') if latest['created_at'] else '' }}
+            </p>
           </div>
           <div class="latest-badges">
             {% if latest[2] %}
-            {% set sev = latest[2] %}
+            {% set sev = latest['severity'] %}
             <span class="sev-badge sev-{{ sev.lower() }}">{{ sev }}</span>
             {% endif %}
-            {% set st = latest[2] if latest[2] else 'pending' %}
+            {% set st = latest['status'] if latest['status'] else 'pending' %}
+            <span class="status-{{ st.lower() }}">
+              {{ st | capitalize }}
+            </span>
             <span class="status-{{ latest[2].lower() if latest[2] else 'pending' }}">
               {{ latest[2] | capitalize if latest[2] else 'Pending' }}
             </span>
