@@ -1,0 +1,181 @@
+{% include "user_header.html" %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityCare – Edit Complaint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+<style>
+:root{--cc-dark:#0d1f13;--cc-green:#1a4d2e;--cc-mid:#2d6a4f;--cc-accent:#52b788;--cc-light:#d8f3dc;--cc-white:#f8fdf9;--cc-text:#1b2d23;--cc-muted:#5a7a65;--cc-border:#d0e8d8;--font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;}
+body{font-family:var(--font-body);background:#f0f6f2;color:var(--cc-text);}
+.cc-page-banner{background:var(--cc-green);padding:32px 0 28px;position:relative;overflow:hidden;}
+.cc-page-banner::before{content:'';position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:rgba(82,183,136,0.12);}
+.cc-banner-title{font-family:var(--font-display);font-size:26px;font-weight:700;color:#fff;margin-bottom:8px;}
+.cc-breadcrumb{display:flex;align-items:center;gap:8px;list-style:none;font-size:13px;color:rgba(255,255,255,0.6);padding:0;margin:0;}
+.cc-breadcrumb a{color:var(--cc-accent);text-decoration:none;}
+.cc-breadcrumb li::after{content:'/';margin-left:8px;}
+.cc-breadcrumb li:last-child::after{display:none;}
+.cc-breadcrumb li:last-child{color:rgba(255,255,255,0.9);}
+.form-wrap{padding:52px 0 80px;}
+.form-card{background:#fff;border:1px solid var(--cc-border);border-radius:20px;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,0.07);max-width:680px;margin:0 auto;}
+.form-card-header{margin-bottom:28px;padding-bottom:22px;border-bottom:1px solid var(--cc-border);}
+.form-card-header h3{font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:6px;}
+.form-card-header p{color:var(--cc-muted);font-size:14px;margin:0;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr;}}
+.cc-field{margin-bottom:18px;}
+.cc-field label{display:block;font-size:12px;font-weight:600;color:var(--cc-muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:7px;}
+.cc-field select,.cc-field input,.cc-field textarea{width:100%;border:1.5px solid var(--cc-border);border-radius:10px;padding:11px 14px;font-size:15px;font-family:var(--font-body);color:var(--cc-text);background:var(--cc-white);transition:border-color 0.2s;}
+.cc-field select:focus,.cc-field input:focus,.cc-field textarea:focus{outline:none;border-color:var(--cc-accent);box-shadow:0 0 0 3px rgba(82,183,136,0.15);}
+.cc-field textarea{resize:vertical;min-height:100px;}
+.severity-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.sev-option input[type=radio]{display:none;}
+.sev-label{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 8px;border-radius:12px;border:1.5px solid var(--cc-border);cursor:pointer;transition:all 0.2s;font-size:13px;font-weight:600;background:#fff;}
+.sev-label .sev-dot{width:12px;height:12px;border-radius:50%;}
+.sev-label.low .sev-dot{background:#2ecc71;} .sev-label.low{color:#1a7a40;}
+.sev-label.medium .sev-dot{background:#f39c12;} .sev-label.medium{color:#9a6000;}
+.sev-label.high .sev-dot{background:#e67e22;} .sev-label.high{color:#a04010;}
+.sev-label.critical .sev-dot{background:#e74c3c;} .sev-label.critical{color:#8b1a1a;}
+.sev-option input[type=radio]:checked + .sev-label.low{background:#e8faf0;border-color:#2ecc71;}
+.sev-option input[type=radio]:checked + .sev-label.medium{background:#fef9e7;border-color:#f39c12;}
+.sev-option input[type=radio]:checked + .sev-label.high{background:#fef0e0;border-color:#e67e22;}
+.sev-option input[type=radio]:checked + .sev-label.critical{background:#fdecea;border-color:#e74c3c;}
+.upload-zone{border:2px dashed var(--cc-border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--cc-white);}
+.upload-zone:hover{border-color:var(--cc-accent);background:#f0faf5;}
+.upload-zone i{font-size:24px;color:var(--cc-muted);margin-bottom:8px;display:block;}
+.upload-zone p{margin:0;font-size:13px;color:var(--cc-muted);}
+#file-name{margin-top:6px;font-size:12px;color:var(--cc-accent);font-weight:600;}
+.btn-row{display:flex;gap:12px;margin-top:8px;}
+.cc-btn-primary{background:var(--cc-green);color:#fff;border:none;padding:13px 28px;border-radius:50px;font-family:var(--font-body);font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px;}
+.cc-btn-primary:hover{background:var(--cc-mid);transform:translateY(-1px);box-shadow:0 5px 16px rgba(26,77,46,0.25);}
+.cc-btn-back{background:transparent;color:var(--cc-muted);border:1.5px solid var(--cc-border);padding:12px 22px;border-radius:50px;font-family:var(--font-body);font-size:14px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:7px;}
+.cc-btn-back:hover{border-color:var(--cc-green);color:var(--cc-green);}
+</style>
+</head>
+<body>
+
+<section class="cc-page-banner">
+  <div class="container">
+    <h1 class="cc-banner-title">Edit Complaint #{{ id }}</h1>
+    <ul class="cc-breadcrumb">
+      <li><a href="{{ url_for('userhome') }}">Dashboard</a></li>
+      <li><a href="{{ url_for('view_complaints_user') }}">My Complaints</a></li>
+      <li>Edit</li>
+    </ul>
+  </div>
+</section>
+
+<div class="form-wrap">
+  <div class="container">
+    <div class="form-card">
+      <div class="form-card-header">
+        <h3>Update Your Complaint</h3>
+        <p>Make changes below. Your priority score will be recalculated automatically.</p>
+      </div>
+
+      <form action="/complaint_update2" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="id" value="{{ id }}">
+
+        <div class="form-grid">
+          <div class="cc-field">
+            <label>Category</label>
+            <select name="category" required>
+            <option value="Organic" {% if category=='Organic' %}selected{% endif %}>Organic Waste</option>
+            <option value="Hazardous" {% if category=='Hazardous' %}selected{% endif %}>Hazardous / Chemical Waste</option>
+            <option value="Liquid" {% if category=='Liquid' %}selected{% endif %}>Liquid Waste</option>
+            <option value="Domestic" {% if category=='Domestic' %}selected{% endif %}>Domestic Waste</option>
+            <option value="Mixed" {% if category=='Mixed' %}selected{% endif %}>Mixed Waste</option>
+
+            <option value="Garbage Overflow" {% if category=='Garbage Overflow' %}selected{% endif %}>Garbage Overflow</option>
+            <option value="Uncollected Waste" {% if category=='Uncollected Waste' %}selected{% endif %}>Uncollected Waste</option>
+            <option value="Streetlight Issue" {% if category=='Streetlight Issue' %}selected{% endif %}>Streetlight Not Working</option>
+            <option value="Water Leakage" {% if category=='Water Leakage' %}selected{% endif %}>Water Leakage</option>
+            <option value="Road Damage" {% if category=='Road Damage' %}selected{% endif %}>Road Damage / Potholes</option>
+            <option value="Drainage Issue" {% if category=='Drainage Issue' %}selected{% endif %}>Drainage Blockage</option>
+            <option value="Public Toilet Issue" {% if category=='Public Toilet Issue' %}selected{% endif %}>Public Toilet Issue</option>
+            <option value="Illegal Dumping" {% if category=='Illegal Dumping' %}selected{% endif %}>Illegal Dumping</option>
+            <option value="Dead Animal" {% if category=='Dead Animal' %}selected{% endif %}>Dead Animal Removal</option>
+          </select>
+          </div>
+
+          <div class="cc-field">
+          <label>Location / Area</label>
+
+          <input list="area_list"
+                name="location"
+                value="{{ location }}"
+                placeholder="Select or type your area"
+                required>
+
+          <datalist id="area_list">
+            <option value="Banjara Hills">
+            <option value="Jubilee Hills">
+            <option value="Madhapur">
+            <option value="Gachibowli">
+            <option value="Kukatpally">
+            <option value="Dilsukhnagar">
+            <option value="Secunderabad">
+            <option value="Ameerpet">
+            <option value="Mehdipatnam">
+            <option value="LB Nagar">
+          </datalist>
+        </div>
+        </div>
+
+        <!-- SEVERITY -->
+        <div class="cc-field">
+          <label>Severity Level</label>
+          <div class="severity-grid">
+            {% for sev in ['Low','Medium','High','Critical'] %}
+            <label class="sev-option">
+              <input type="radio" name="severity" value="{{ sev }}"
+                     {% if (severity if severity else 'Medium')==sev %}checked{% endif %}>
+              <span class="sev-label {{ sev.lower() }}">
+                <span class="sev-dot"></span>{{ sev }}
+              </span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="cc-field">
+          <label>Address / Description</label>
+          <textarea name="address" required>{{ address }}</textarea>
+        </div>
+
+        <div class="cc-field">
+          <label>Replace Photo</label>
+          <div class="upload-zone" onclick="document.getElementById('pic-input').click()">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Click to upload a new photo</p>
+            <div id="file-name"></div>
+            <input type="file" id="pic-input" name="pic" accept="image/*" required
+                   onchange="document.getElementById('file-name').textContent = this.files[0]?.name || ''">
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <a href="{{ url_for('view_complaints_user') }}" class="cc-btn-back">
+            <i class="fas fa-arrow-left"></i> Back
+          </a>
+          <button class="cc-btn-primary" type="submit">
+            <i class="fas fa-save"></i> Save Changes
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+{% include "footer.html" %}
+<script src="{{ url_for('static',filename='assets/js/jquery-3.2.1.min.js')}}"></script>
+<script src="{{ url_for('static',filename='assets/js/bootstrap.min.js')}}"></script>
+</body>
+</html>

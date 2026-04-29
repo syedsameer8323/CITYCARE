@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityCare – {{ staff['name'] }} · Staff Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+<style>
+:root{
+  --dark:#0d1f13;--green:#1a4d2e;--mid:#2d6a4f;
+  --accent:#52b788;--light:#d8f3dc;--lighter:#edf7f0;
+  --white:#f8fdf9;--text:#1b2d23;--muted:#5a7a65;--border:#d0e8d8;
+  --font-h:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-b);background:#eef5f0;color:var(--text);}
+
+/* ── TOP NAV BAR ── */
+.top-nav{
+  background:#0d1f13;
+  padding:0;
+  position:sticky;top:0;z-index:200;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.top-nav-inner{
+  display:flex;align-items:center;
+  padding:0 20px;
+  height:54px;
+  gap:0;
+}
+.nav-brand{
+  display:flex;align-items:center;gap:8px;text-decoration:none;
+  padding-right:24px;border-right:1px solid rgba(255,255,255,0.1);margin-right:16px;
+}
+.nav-brand-icon{width:30px;height:30px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.nav-brand-icon i{color:var(--dark);font-size:13px;}
+.nav-brand-name{font-family:var(--font-h);font-size:16px;font-weight:700;color:#fff;}
+.nav-brand-name span{color:var(--accent);}
+.nav-links{display:flex;align-items:center;gap:2px;flex:1;}
+.nav-link{display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:8px;color:rgba(255,255,255,0.6);text-decoration:none;font-size:13px;font-weight:500;transition:all 0.2s;white-space:nowrap;}
+.nav-link i{font-size:12px;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:#fff;}
+.nav-link.active{background:rgba(82,183,136,0.15);color:var(--accent);}
+.nav-right{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.nav-user{display:flex;align-items:center;gap:8px;}
+.nav-avatar{width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--dark);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);}
+.nav-user-name{font-size:13px;font-weight:600;color:#fff;}
+.nav-logout{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;color:#ff8a80;font-size:12px;font-weight:500;text-decoration:none;transition:background 0.2s;margin-left:8px;border-left:1px solid rgba(255,255,255,0.1);padding-left:16px;}
+.nav-logout:hover{background:rgba(255,80,60,0.1);color:#ff6b60;}
+@media(max-width:768px){
+  .nav-links .nav-link span{display:none;}
+  .nav-user-name{display:none;}
+}
+
+/* ── PROFILE HERO ── */
+.profile-hero{
+  background:linear-gradient(135deg,var(--dark) 0%,#163d25 60%,#1e5234 100%);
+  padding:36px 0 0;position:relative;overflow:hidden;
+}
+.profile-hero::before{content:'';position:absolute;right:-80px;top:-80px;width:260px;height:260px;border-radius:50%;background:rgba(82,183,136,0.07);}
+.profile-hero::after{content:'';position:absolute;left:-40px;bottom:0;width:160px;height:160px;border-radius:50%;background:rgba(82,183,136,0.04);}
+.hero-inner{display:flex;align-items:flex-start;gap:24px;position:relative;z-index:1;}
+.hero-avatar{
+  width:96px;height:96px;border-radius:20px;
+  background:rgba(82,183,136,0.15);
+  border:2px solid rgba(82,183,136,0.3);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  font-family:var(--font-h);font-size:34px;font-weight:800;color:var(--accent);
+}
+.hero-info{flex:1;}
+.hero-name{font-family:var(--font-h);font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom:3px;}
+.hero-role{font-size:14px;color:rgba(255,255,255,0.5);margin-bottom:12px;}
+.hero-tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+.hero-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.65);font-size:12px;padding:4px 11px;border-radius:50px;border:1px solid rgba(255,255,255,0.1);}
+.hero-tag i{font-size:10px;color:var(--accent);}
+.grade-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.grade-hero-badge{display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:50px;font-family:var(--font-h);font-size:14px;font-weight:700;}
+.grade-s{background:rgba(82,183,136,0.2);border:1.5px solid rgba(82,183,136,0.4);color:var(--accent);}
+.grade-a{background:rgba(26,110,191,0.2);border:1.5px solid rgba(26,110,191,0.4);color:#7ab8ef;}
+.grade-b{background:rgba(230,126,34,0.2);border:1.5px solid rgba(230,126,34,0.4);color:#e67e22;}
+.grade-c{background:rgba(231,76,60,0.2);border:1.5px solid rgba(231,76,60,0.4);color:#e74c3c;}
+.stars-display{display:flex;gap:3px;}
+.stars-display i{font-size:16px;color:var(--accent);}
+.stars-display i.empty{color:rgba(255,255,255,0.15);}
+.score-bar-hero{margin-top:14px;padding:14px 18px;background:rgba(255,255,255,0.05);border-radius:11px;border:1px solid rgba(255,255,255,0.07);}
+.score-bar-label{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:7px;}
+.score-bar-track{height:9px;border-radius:5px;background:rgba(255,255,255,0.1);}
+.score-bar-fill{height:9px;border-radius:5px;background:linear-gradient(90deg,var(--accent),#40916c);transition:width 1.2s ease;}
+
+/* ── TABS ── */
+.tab-nav{display:flex;border-top:1px solid rgba(255,255,255,0.08);margin-top:18px;position:relative;z-index:1;}
+.tab-btn{flex:1;padding:13px 8px;text-align:center;font-size:13px;font-weight:600;color:rgba(255,255,255,0.4);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-b);}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-btn:hover:not(.active){color:rgba(255,255,255,0.7);}
+
+/* ── CONTENT AREA ── */
+.profile-content{padding:28px 0 80px;}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+
+/* ── CARDS ── */
+.card{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:18px;}
+.card-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:#fafcfb;}
+.card-header h4{font-family:var(--font-h);font-size:13px;font-weight:700;margin:0;}
+.card-header i{color:var(--accent);font-size:13px;}
+.card-body{padding:20px;}
+
+/* ── METRICS GRID ── */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+@media(max-width:760px){.metrics-grid{grid-template-columns:repeat(2,1fr);}}
+.metric-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center;}
+.metric-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto 10px;}
+.metric-val{font-family:var(--font-h);font-size:28px;font-weight:800;line-height:1;margin-bottom:4px;}
+.metric-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+
+/* ── RESOLVED LIST ── */
+.resolved-item{padding:13px 20px;border-bottom:1px solid #f0f6f2;display:flex;align-items:flex-start;gap:13px;}
+.resolved-item:last-child{border-bottom:none;}
+.ri-icon{width:34px;height:34px;background:var(--light);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--green);font-size:13px;}
+.ri-body{flex:1;}
+.ri-title{font-size:13px;font-weight:600;margin-bottom:2px;}
+.ri-meta{font-size:11px;color:var(--muted);}
+.ri-date{font-size:11px;color:var(--muted);white-space:nowrap;margin-left:8px;}
+
+/* ── REVIEWS ── */
+.review-item{padding:14px 20px;border-bottom:1px solid #f0f6f2;}
+.review-item:last-child{border-bottom:none;}
+.review-stars{display:flex;gap:3px;margin-bottom:5px;}
+.review-stars i{font-size:12px;color:var(--accent);}
+.review-stars i.empty{color:var(--border);}
+.review-text{font-size:13px;line-height:1.6;color:var(--text);margin-bottom:5px;}
+.review-meta{font-size:11px;color:var(--muted);}
+
+/* ── POLITICAL LAYOUT ── */
+.political-layout{display:grid;grid-template-columns:1fr 260px;gap:18px;}
+@media(max-width:768px){.political-layout{grid-template-columns:1fr;}}
+.rank-card{background:linear-gradient(135deg,var(--dark) 0%,#1e5234 100%);border-radius:16px;padding:24px;text-align:center;color:#fff;margin-bottom:16px;}
+.rank-num{font-family:var(--font-h);font-size:52px;font-weight:800;color:var(--accent);line-height:1;}
+.rank-label{font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px;}
+.rank-zone{font-size:14px;font-weight:600;margin-top:8px;}
+.share-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;border-radius:11px;background:var(--light);color:var(--green);border:1.5px solid var(--border);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-b);transition:all 0.2s;margin-top:8px;}
+.share-btn:first-child{margin-top:0;}
+.share-btn:hover{background:var(--green);color:#fff;border-color:var(--green);}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:36px 20px;color:var(--muted);}
+.empty-state i{font-size:36px;opacity:0.2;display:block;margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<!-- ── TOP NAVIGATION ── -->
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="{{ url_for('staff_home') }}" class="nav-brand">
+      <div class="nav-brand-icon"><i class="fas fa-recycle"></i></div>
+      <span class="nav-brand-name">CITY<span>CARE</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="{{ url_for('staff_home') }}" class="nav-link">
+        <i class="fas fa-th-large"></i><span>Dashboard</span>
+      </a>
+      <a href="{{ url_for('staff_complaints') }}" class="nav-link">
+        <i class="fas fa-clipboard-list"></i><span>My Complaints</span>
+      </a>
+      <a href="{{ url_for('staff_notifications') }}" class="nav-link">
+        <i class="fas fa-bell"></i><span>Notifications</span>
+      </a>
+      <a href="{{ url_for('staff_profile', staff_id=session.get('staff_id')) }}"
+         class="nav-link active">
+        <i class="fas fa-user-circle"></i><span>My Profile</span>
+      </a>
+    </div>
+    <div class="nav-right">
+      <div class="nav-user">
+        <div class="nav-avatar">{{ staff['name'][:2].upper() }}</div>
+        <span class="nav-user-name">{{ staff['name'] }}</span>
+      </div>
+      <a href="{{ url_for('staff_logout') }}" class="nav-logout">
+        <i class="fas fa-sign-out-alt"></i><span>Sign Out</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── PROFILE HERO ── -->
+<div class="profile-hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-avatar">{{ staff['name'][:2].upper() }}</div>
+      <div class="hero-info">
+        <div class="hero-name">{{ staff['name'] }}</div>
+        <div class="hero-role">{{ staff['designation'] }} · {{ staff['department'] }}</div>
+        <div class="hero-tags">
+          <span class="hero-tag"><i class="fas fa-map-marker-alt"></i> {{ staff['zone'] }}</span>
+          <span class="hero-tag"><i class="fas fa-id-badge"></i> {{ staff['employee_id'] }}</span>
+          <span class="hero-tag">
+            <i class="fas fa-calendar-check"></i>
+            Since {{ staff['joined'].strftime('%b %Y') if staff['joined'] else 'N/A' }}
+          </span>
+        </div>
+        <div class="grade-row">
+          {% set score = staff['performance_score'] or 0 %}
+          {% if score >= 90 %}
+            <span class="grade-hero-badge grade-s"><i class="fas fa-trophy"></i> Grade S — Elite Performer</span>
+          {% elif score >= 75 %}
+            <span class="grade-hero-badge grade-a"><i class="fas fa-medal"></i> Grade A — Excellent</span>
+          {% elif score >= 55 %}
+            <span class="grade-hero-badge grade-b"><i class="fas fa-thumbs-up"></i> Grade B — Good</span>
+          {% else %}
+            <span class="grade-hero-badge grade-c"><i class="fas fa-seedling"></i> Grade C — Improving</span>
+          {% endif %}
+          <div class="stars-display">
+            {% set stars = ((staff['avg_rating'] or 0) | round | int) %}
+            {% for i in range(5) %}
+              <i class="fas fa-star {% if i >= stars %}empty{% endif %}"></i>
+            {% endfor %}
+          </div>
+          <span style="color:rgba(255,255,255,0.6);font-size:13px;font-weight:600;">
+            {{ "%.1f"|format(staff['avg_rating'] or 0) }} / 5
+          </span>
+        </div>
+        <div class="score-bar-hero">
+          <div class="score-bar-label">
+            <span>Performance Score</span>
+            <span style="color:#fff;font-weight:700;">{{ score }} / 100</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" id="scoreBar" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Nav -->
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="showTab('overview',this)">
+        <i class="fas fa-chart-bar"></i> Overview
+      </button>
+      <button class="tab-btn" onclick="showTab('resolved',this)">
+        <i class="fas fa-check-double"></i> Work Done
+      </button>
+      <button class="tab-btn" onclick="showTab('reviews',this)">
+        <i class="fas fa-star"></i> Reviews
+      </button>
+      <button class="tab-btn" onclick="showTab('political',this)">
+        <i class="fas fa-award"></i> Public Record
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CONTENT ── -->
+<div class="profile-content">
+  <div class="container">
+
+    <!-- OVERVIEW TAB -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon" style="background:#e8faf0;color:var(--green);">
+            <i class="fas fa-check-double"></i>
+          </div>
+          <div class="metric-val" style="color:var(--green);">{{ stats['resolved'] }}</div>
+          <div class="metric-label">Resolved</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background:#fff3e0;color:#e67e22;">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="metric-val" style="color:#e67e22;">{{ stats['avg_days'] or 0 }}</div>
+          <div class="metric-label">Avg Days</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background:var(--light);color:var(--green);">
+            <i class="fas fa-star"></i>
+          </div>
+          <div class="metric-val" style="color:var(--green);">
+            {{ "%.1f"|format(staff['avg_rating'] or 0) }}
+          </div>
+          <div class="metric-label">Avg Rating</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background:#e3f0ff;color:#1a6ebf;">
+            <i class="fas fa-fire"></i>
+          </div>
+          <div class="metric-val" style="color:#1a6ebf;">{{ stats['critical_resolved'] }}</div>
+          <div class="metric-label">Critical Fixed</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><i class="fas fa-chart-pie"></i><h4>Work by Category</h4></div>
+        <div class="card-body">
+          {% if stats['categories'] %}
+            {% for cat, count in stats['categories'] %}
+            <div style="margin-bottom:14px;">
+              <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:5px;">
+                <span>{{ cat }}</span>
+                <span style="color:var(--accent);">{{ count }}</span>
+              </div>
+              <div style="height:7px;border-radius:4px;background:var(--border);">
+                <div style="height:7px;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--green));
+                     width:{{ [(count / stats['max_cat'] * 100)|int if stats['max_cat'] else 0, 100]|min }}%;">
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+          <p style="font-size:13px;color:var(--muted);text-align:center;padding:16px 0;">
+            No category data yet.
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- WORK DONE TAB -->
+    <div class="tab-panel" id="tab-resolved">
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-clipboard-check"></i>
+          <h4>Resolved Complaints ({{ resolved_complaints | length }})</h4>
+        </div>
+        {% if resolved_complaints %}
+          {% for c in resolved_complaints %}
+          <div class="resolved-item">
+            <div class="ri-icon"><i class="fas fa-check"></i></div>
+            <div class="ri-body">
+              <div class="ri-title">#{{ c['complaint_id'] }} · {{ c['category'] or '—' }}</div>
+              <div class="ri-meta">
+                <i class="fas fa-map-marker-alt" style="font-size:10px;margin-right:3px;"></i>
+                {{ c['location'] or '—' }}
+              </div>
+              {% if c['notes'] %}
+              <div class="ri-meta" style="margin-top:3px;font-style:italic;">
+                "{{ c['notes'][:80] }}{% if c['notes']|length > 80 %}…{% endif %}"
+              </div>
+              {% endif %}
+            </div>
+            <div class="ri-date">
+              {{ c['resolved_at'].strftime('%d %b %Y') if c['resolved_at'] else '—' }}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="empty-state">
+          <i class="fas fa-clipboard"></i>
+          <p>No resolved complaints yet.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- REVIEWS TAB -->
+    <div class="tab-panel" id="tab-reviews">
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-comments"></i>
+          <h4>Citizen Reviews ({{ reviews | length }})</h4>
+        </div>
+        {% if reviews %}
+          {% for r in reviews %}
+          <div class="review-item">
+            <div class="review-stars">
+              {% for i in range(5) %}
+                <i class="fas fa-star {% if i >= r['rating'] %}empty{% endif %}"></i>
+              {% endfor %}
+            </div>
+            {% if r['comment'] %}
+            <div class="review-text">"{{ r['comment'] }}"</div>
+            {% endif %}
+            <div class="review-meta">
+              — Complaint #{{ r['complaint_id'] }}
+              · {{ r['created_at'].strftime('%d %b %Y') if r['created_at'] else '' }}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="empty-state">
+          <i class="fas fa-star"></i>
+          <p>No reviews yet.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- PUBLIC RECORD TAB -->
+    <div class="tab-panel" id="tab-political">
+      <div class="political-layout">
+        <div>
+          <div class="card" style="border:2px solid var(--border);">
+            <div class="card-header" style="background:linear-gradient(135deg,var(--lighter),#fff);">
+              <i class="fas fa-award" style="color:var(--green);font-size:16px;"></i>
+              <h4 style="font-size:15px;">Public Service Record</h4>
+              <span style="margin-left:auto;font-size:10px;color:var(--muted);font-weight:600;">
+                <i class="fas fa-shield-check" style="margin-right:3px;color:var(--accent);"></i>
+                Verified by CityCare
+              </span>
+            </div>
+            <div class="card-body">
+              <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:18px;">
+                This is the verified public service record of <strong>{{ staff['name'] }}</strong>.
+                All data is sourced from the CityCare complaint management system and
+                represents real work done for the community.
+              </p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
+                <div style="background:var(--lighter);border-radius:12px;padding:16px;text-align:center;">
+                  <div style="font-family:var(--font-h);font-size:30px;font-weight:800;color:var(--green);">
+                    {{ stats['resolved'] }}
+                  </div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:3px;">Community Issues Resolved</div>
+                </div>
+                <div style="background:var(--lighter);border-radius:12px;padding:16px;text-align:center;">
+                  <div style="font-family:var(--font-h);font-size:30px;font-weight:800;color:var(--green);">
+                    {{ stats['critical_resolved'] }}
+                  </div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:3px;">Critical Emergencies Handled</div>
+                </div>
+                <div style="background:var(--lighter);border-radius:12px;padding:16px;text-align:center;">
+                  <div style="font-family:var(--font-h);font-size:30px;font-weight:800;color:var(--green);">
+                    {{ "%.1f"|format(staff['avg_rating'] or 0) }}
+                  </div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:3px;">Citizen Satisfaction Score</div>
+                </div>
+                <div style="background:var(--lighter);border-radius:12px;padding:16px;text-align:center;">
+                  <div style="font-family:var(--font-h);font-size:30px;font-weight:800;color:var(--green);">
+                    {{ staff['performance_score'] or 0 }}
+                  </div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:3px;">Performance Score (/100)</div>
+                </div>
+              </div>
+              <div style="padding:13px;background:#f0faf5;border-radius:10px;border-left:4px solid var(--accent);">
+                <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px;">
+                  <i class="fas fa-lock" style="margin-right:4px;"></i>Integrity Statement
+                </div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.6;">
+                  This record is auto-generated from verified complaint resolution data.
+                  It cannot be manually edited. Citizens can use this information to evaluate
+                  public servants at elections.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="rank-card">
+            <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:8px;">
+              ZONE RANK
+            </div>
+            <div class="rank-num">#{{ stats['zone_rank'] or '—' }}</div>
+            <div class="rank-label">out of {{ stats['zone_total'] }} staff</div>
+            <div class="rank-zone">{{ staff['zone'] }}</div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <button class="share-btn" onclick="shareProfile()">
+                <i class="fas fa-share-alt"></i> Share Profile
+              </button>
+              <button class="share-btn" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Record
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function showTab(name, btn){
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('scoreBar').style.width = '{{ staff["performance_score"] or 0 }}%';
+  }, 300);
+});
+function shareProfile(){
+  if(navigator.share){
+    navigator.share({
+      title: '{{ staff["name"] }} – CityCare Public Service Profile',
+      url:   window.location.href
+    });
+  } else {
+    navigator.clipboard.writeText(window.location.href);
+    alert('Profile link copied to clipboard!');
+  }
+}
+</script>
+</body>
+</html>

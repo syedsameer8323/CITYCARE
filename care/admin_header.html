@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/style.css')}}">
+</head>
+<body>
+    <!-- ======================header started====================== -->
+    <header>
+        <div class="my-nav sub-01">
+            <div class="container">
+                <div class="nav-items">
+                    <div class="menu-toggle">
+                        <div class="menu-burger"></div>
+                    </div>
+                    <div class="logo">
+                    </div>
+                    <div class="menu-items">
+                        <div class="menu">
+                            <ul>
+                                <li><a href="{{url_for('adminhome')}}">Home</a></li>
+                                <li><a href="{{url_for('add_questions')}}">Add&nbsp;Q&A</a></li>
+                                <li><a href="{{url_for('view_complaints')}}">View&nbsp;Complaints</a></li>
+                                <li><a href="{{url_for('logout')}}">Logout</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>

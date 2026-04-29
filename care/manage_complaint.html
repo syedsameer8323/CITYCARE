@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityCare – Manage Complaint #{{ complaint.complaint_id }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css') }}">
+<style>
+:root {
+  --dark:#0d1f13; --green:#1a4d2e; --mid:#2d6a4f;
+  --accent:#52b788; --light:#d8f3dc; --white:#f8fdf9;
+  --text:#1b2d23; --muted:#5a7a65; --border:#d0e8d8; --bg:#f0f6f2;
+  --fd:'Syne',sans-serif; --fb:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--fb);background:var(--bg);color:var(--text);min-height:100vh;padding:28px 20px 60px;}
+
+.wrap{max-width:1140px;margin:0 auto;}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
+.back-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:50px;background:#fff;border:1.5px solid var(--border);color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;transition:all .2s;}
+.back-btn:hover{border-color:var(--green);color:var(--green);}
+.page-title{font-family:var(--fd);font-size:22px;font-weight:700;}
+.page-meta{margin-left:auto;font-size:12px;color:var(--muted);}
+
+/* FLASH */
+.flash{display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:14px;}
+.flash-success{background:#e8faf0;color:#1a4d2e;border:1px solid #b7e4c7;}
+.flash-warning{background:#fff3e0;color:#7a4510;border:1px solid #f5c26b;}
+.flash-danger{background:#fdecea;color:#7a0a00;border:1px solid #f1a9a0;}
+.flash-info{background:#e3f0ff;color:#1a3a6b;border:1px solid #a9c8f0;}
+
+/* HEADER CARD */
+.hcard{background:#fff;border:1px solid var(--border);border-radius:16px;padding:22px 26px;display:flex;align-items:flex-start;gap:20px;margin-bottom:22px;flex-wrap:wrap;}
+.hc-id{width:74px;height:74px;border-radius:14px;background:var(--light);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
+.hc-id .num{font-family:var(--fd);font-size:20px;font-weight:700;color:var(--green);}
+.hc-id .lbl{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.hc-body{flex:1;min-width:200px;}
+.hc-cat{font-family:var(--fd);font-size:19px;font-weight:700;margin-bottom:8px;}
+.hc-meta{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px;}
+.hm-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);}
+.hm-item i{color:var(--accent);font-size:11px;}
+.hc-badges{display:flex;flex-wrap:wrap;gap:6px;}
+.hc-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-shrink:0;}
+.p-ring{width:66px;height:66px;border-radius:50%;border:3px solid var(--accent);background:var(--light);display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.p-ring .pn{font-family:var(--fd);font-size:19px;font-weight:700;color:var(--green);line-height:1;}
+.p-ring .pl{font-size:8px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}
+
+/* BADGES */
+.bdg{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:50px;font-size:11px;font-weight:700;}
+.bdg-dot::before{content:'';width:6px;height:6px;border-radius:50%;}
+.bc{background:#fdecea;color:#c0392b;} .bc::before{background:#e74c3c;}
+.bh{background:#fef0e0;color:#a04010;} .bh::before{background:#e67e22;}
+.bm{background:#fef9e7;color:#9a6000;} .bm::before{background:#f39c12;}
+.bl{background:#e8faf0;color:#1a7a40;} .bl::before{background:#2ecc71;}
+.bs-pending{background:#fff3e0;color:#e67e22;}
+.bs-resolved{background:#e8faf0;color:#1a7a40;}
+.bs-processing,.bs-in-progress,.bs-inprogress{background:#e3f0ff;color:#1a6ebf;}
+.bs-escalated{background:#f3e8ff;color:#8e44ad;}
+.bs-overdue{background:#fdecea;color:#c0392b;}
+.bd-ok{background:#e8faf0;color:#1a7a40;font-size:12px;padding:5px 12px;}
+.bd-warn{background:#fff3e0;color:#e67e22;font-size:12px;padding:5px 12px;}
+.bd-over{background:#fdecea;color:#c0392b;font-size:12px;padding:5px 12px;}
+
+/* GRID */
+.main-grid{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;}
+
+/* PANEL */
+.panel{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:18px;}
+.panel:last-child{margin-bottom:0;}
+.phd{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.ph-ico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.phi-gr{background:var(--light);color:var(--green);}
+.phi-bl{background:#e3f0ff;color:#1a6ebf;}
+.phi-or{background:#fef0e0;color:#e67e22;}
+.phi-pu{background:#f3e8ff;color:#8e44ad;}
+.phi-tl{background:#e0f7fa;color:#00838f;}
+.ptitle{font-family:var(--fd);font-size:14px;font-weight:700;flex:1;}
+.pbody{padding:20px;}
+
+/* FORM */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fld{margin-bottom:16px;}
+.fld:last-child{margin-bottom:0;}
+.fld label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.fld select,.fld input,.fld textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;font-size:13px;font-family:var(--fb);color:var(--text);background:var(--white);transition:border-color .2s;}
+.fld textarea{resize:vertical;min-height:74px;}
+.fld select:focus,.fld input:focus,.fld textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(82,183,136,.12);}
+.fhint{font-size:11px;color:var(--muted);margin-top:5px;}
+
+
+
+
+
+
+/* Staff Picker Styles */
+/* Staff Picker Styles */
+.label-info {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--muted);
+    margin-left: 6px;
+    text-transform: none;
+}
+
+.slist {
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--white);
+    max-height: 350px;
+    overflow-y: auto;
+    margin-top: 5px;
+}
+
+.dept-hd {
+    background: #f8fbf9;
+    padding: 8px 15px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* FIX: Ensure item is a flex container and doesn't wrap */
+.sitem {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid #f0f0f0;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.sitem:last-child { border-bottom: none; }
+.sitem:hover { background: #f9f9f9; }
+.sitem.on { background: rgba(82, 183, 136, 0.08); }
+
+/* CRITICAL FIX: Reset the global input width for the radio buttons */
+.si-radio {
+    width: 18px !important;      /* Forces it away from 100% */
+    height: 18px !important;
+    padding: 0 !important;      /* Removes global padding */
+    margin: 0 !important;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;             /* Prevents it from getting squashed */
+    border: none !important;    /* Removes global borders */
+}
+
+.si-av {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* FIX: si-inf must grow to push the load pill to the right */
+.si-inf {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0; /* Allows text truncation if needed */
+}
+
+.si-nm {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+}
+
+.si-desig {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
+    margin-left: 4px;
+}
+
+.si-sb {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+/* Load Pills */
+.lp {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.lp-f { background: #e8f5e9; color: #2e7d32; } 
+.lp-b { background: #fff3e0; color: #ef6c00; } 
+.lp-o { background: #ffebee; color: #c62828; } 
+
+.no-staff {
+    padding: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+/* STAFF LIST */
+.slist{border:1.5px solid var(--border);border-radius:10px;overflow:hidden;max-height:310px;overflow-y:auto;}
+.slist::-webkit-scrollbar{width:5px;}
+.slist::-webkit-scrollbar-track{background:#f0f6f2;}
+.slist::-webkit-scrollbar-thumb{background:var(--accent);border-radius:3px;}
+.dept-hd{padding:7px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);background:#f7fcf9;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;position:sticky;top:0;z-index:2;}
+.sitem{padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .15s;border-bottom:1px solid #f0f6f2;}
+.sitem:last-child{border-bottom:none;}
+.sitem:hover{background:#f7fcf9;}
+.sitem.on{background:var(--light);}
+.si-radio{width:15px;height:15px;accent-color:var(--green);flex-shrink:0;}
+.si-av{width:32px;height:32px;border-radius:8px;background:var(--light);color:var(--green);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.si-inf{flex:1;min-width:0;}
+.si-nm{font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.si-sb{font-size:10px;color:var(--muted);margin-top:1px;}
+.si-desig{font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;background:var(--light);color:var(--green);}
+.lp{font-size:11px;font-weight:700;padding:2px 8px;border-radius:50px;flex-shrink:0;}
+.lp-f{background:#e8faf0;color:#1a7a40;}
+.lp-b{background:#fff3e0;color:#e67e22;}
+.lp-o{background:#fdecea;color:#c0392b;}
+
+/* REMINDERS */
+.rpills{display:flex;gap:8px;flex-wrap:wrap;}
+.rpill{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:50px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:#fff;cursor:pointer;transition:all .2s;font-family:var(--fb);user-select:none;}
+.rpill:hover{border-color:var(--accent);color:var(--green);}
+.rpill.on{background:var(--green);color:#fff;border-color:var(--green);}
+.rpill-cust{border-style:dashed;}
+.rconfirm{display:none;margin-top:8px;font-size:11px;font-weight:700;color:var(--green);}
+
+/* ESCALATION */
+.esc-path{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:14px;background:#f7fcf9;border-radius:10px;border:1px solid var(--border);margin-bottom:12px;}
+.ep-step{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.ep-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+.ep-cur{background:var(--green);color:#fff;}
+.ep-nxt{background:#8e44ad;color:#fff;}
+.ep-off{background:#e8eee8;color:var(--muted);}
+.ep-lbl{font-size:9px;font-weight:700;color:var(--muted);text-align:center;max-width:58px;line-height:1.2;}
+.ep-arr{color:#ccc;font-size:12px;margin:0 2px;}
+.esc-info{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6;}
+.esc-done{background:#f3e8ff;border:1px solid #c9a9f5;border-radius:10px;padding:12px 14px;margin-top:14px;}
+.esc-done-t{font-size:12px;font-weight:700;color:#8e44ad;margin-bottom:4px;}
+.esc-done-b{font-size:12px;color:#6a2a9a;line-height:1.5;}
+
+/* WORKLOAD */
+.wl-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f6f2;margin-bottom:14px;}
+.wl-av{width:44px;height:44px;border-radius:12px;background:var(--light);color:var(--green);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.wl-nm{font-size:14px;font-weight:700;}
+.wl-sb{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;}
+.wbar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;}
+.wbar-lbl{font-size:11px;color:var(--muted);width:76px;flex-shrink:0;}
+.wbar-tr{flex:1;height:6px;background:#eee;border-radius:3px;overflow:hidden;}
+.wbar-fl{height:6px;border-radius:3px;}
+.wf-g{background:var(--accent);}
+.wf-o{background:#e67e22;}
+.wbar-v{font-size:11px;font-weight:700;color:var(--muted);min-width:20px;text-align:right;}
+.srow{display:flex;gap:8px;margin-top:12px;}
+.sbox{flex:1;border-radius:9px;padding:10px 8px;text-align:center;}
+.sbox .sv{font-size:18px;font-weight:700;font-family:var(--fd);line-height:1;margin-bottom:3px;}
+.sbox .sl{font-size:10px;color:var(--muted);}
+.sb-g{background:var(--light);} .sb-g .sv{color:var(--green);}
+.sb-b{background:#e3f0ff;}    .sb-b .sv{color:#1a6ebf;}
+
+/* QUICK MSG */
+.qbar{display:flex;gap:8px;margin-bottom:12px;}
+.qi{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;font-family:var(--fb);}
+.qi:focus{outline:none;border-color:var(--accent);}
+.qs{background:var(--green);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;cursor:pointer;transition:background .2s;white-space:nowrap;}
+.qs:hover{background:var(--mid);}
+.qok{display:none;font-size:12px;font-weight:700;color:var(--green);margin-bottom:10px;}
+.qtpls{display:flex;flex-wrap:wrap;gap:6px;}
+.qtpl-lbl{font-size:11px;font-weight:600;color:var(--muted);width:100%;margin-bottom:2px;}
+
+/* TABS */
+.tnav{display:flex;gap:3px;background:#f0f6f2;border-radius:10px;padding:4px;margin-bottom:16px;}
+.tbtn{flex:1;padding:8px 6px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:transparent;color:var(--muted);font-family:var(--fb);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.tbtn.on{background:#fff;color:var(--green);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.tpane{display:none;}
+.tpane.on{display:block;}
+.cbdg{background:#e74c3c;color:#fff;font-size:9px;padding:1px 5px;border-radius:50px;}
+.cbdg-b{background:#1a6ebf;}
+
+/* NOTIF / ACTIVITY */
+.ni{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f0f6f2;}
+.ni:last-child{border-bottom:none;}
+.ni-ic{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+.ni-as{background:#e8faf0;color:var(--green);}
+.ni-re{background:#fff3e0;color:#e67e22;}
+.ni-es{background:#f3e8ff;color:#8e44ad;}
+.ni-mg{background:#e3f0ff;color:#1a6ebf;}
+.ni-sy{background:var(--light);color:var(--green);}
+.ni-bd{flex:1;}
+.ni-tx{font-size:12px;line-height:1.45;}
+.ni-mt{font-size:10px;color:var(--muted);margin-top:3px;}
+.nt{display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;text-transform:uppercase;margin-right:4px;}
+.nt-as{background:#e8faf0;color:var(--green);}
+.nt-re{background:#fff3e0;color:#e67e22;}
+.nt-es{background:#f3e8ff;color:#8e44ad;}
+.nt-mg{background:#e3f0ff;color:#1a6ebf;}
+
+.ai{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f0f6f2;}
+.ai:last-child{border-bottom:none;}
+.ai-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px;}
+.ai-bd{flex:1;}
+.ai-ac{font-size:12px;font-weight:600;}
+.ai-nt{font-size:11px;color:var(--muted);margin-top:2px;}
+.ai-tm{font-size:10px;color:var(--muted);margin-top:2px;}
+
+.empty{text-align:center;padding:22px 0;font-size:12px;color:var(--muted);}
+.empty i{font-size:22px;opacity:.3;display:block;margin-bottom:6px;}
+
+/* BUTTONS */
+.brow{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:11px 22px;border-radius:50px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:var(--fb);text-decoration:none;transition:all .2s;}
+.btn-pr{background:var(--green);color:#fff;}
+.btn-pr:hover{background:var(--mid);color:#fff;}
+.btn-ot{background:transparent;border:1.5px solid var(--border);color:var(--muted);}
+.btn-ot:hover{border-color:var(--green);color:var(--green);}
+.btn-pu{background:#f3e8ff;color:#8e44ad;}
+.btn-pu:hover{background:#8e44ad;color:#fff;}
+.btn-sm{padding:8px 16px;font-size:12px;}
+
+@media(max-width:960px){.main-grid{grid-template-columns:1fr;}.hc-right{align-items:flex-start;}.g2{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <a href="/adminhome" class="back-btn"><i class="fas fa-arrow-left"></i> Dashboard</a>
+  <div class="page-title">Manage Complaint #{{ complaint.complaint_id }}</div>
+  <span class="page-meta"><i class="fas fa-shield-alt" style="color:var(--accent);margin-right:4px;"></i>Admin Control Panel</span>
+</div>
+
+<!-- FLASH MESSAGES (deduplicated) -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% set seen = namespace(msgs=[]) %}
+  {% for cat, msg in messages %}
+    {% if msg not in seen.msgs %}
+      {% set _ = seen.msgs.append(msg) %}
+      <div class="flash flash-{{ cat }}">
+        <i class="fas fa-{% if cat=='success' %}check-circle{% elif cat=='warning' %}exclamation-triangle{% else %}times-circle{% endif %}"></i>
+        {{ msg }}
+      </div>
+    {% endif %}
+  {% endfor %}
+{% endwith %}
+
+<!-- COMPLAINT HEADER -->
+{% set days_old   = (complaint.days_pending | default(0)) | int %}
+{% set is_overdue = days_old > 5 and complaint.status not in ['resolved','Resolved'] %}
+{% set sev_key    = (complaint.severity or 'Medium').lower()[:1] %}
+{% set sev_cls    = {'c':'bc','h':'bh','m':'bm','l':'bl'}.get(sev_key,'bm') %}
+{% set st_cls     = 'bs-' + (complaint.status or 'pending').lower().replace(' ','-') %}
+
+<div class="hcard">
+  <div class="hc-id">
+    <span class="num">#{{ complaint.complaint_id }}</span>
+    <span class="lbl">Complaint</span>
+  </div>
+
+  <div class="hc-body">
+    <div class="hc-cat">{{ complaint.category or '—' }}</div>
+    <div class="hc-meta">
+      <span class="hm-item"><i class="fas fa-map-marker-alt"></i>{{ complaint.location or '—' }}</span>
+      <span class="hm-item"><i class="fas fa-user"></i>{{ complaint.user_full_name or complaint.user_name or '—' }}</span>
+      <span class="hm-item"><i class="fas fa-calendar-alt"></i>{{ complaint.created_at.strftime('%d %b %Y') if complaint.created_at else '—' }}</span>
+      {% if complaint.staff_dept %}
+        <span class="hm-item"><i class="fas fa-building"></i>{{ complaint.staff_dept }}</span>
+      {% endif %}
+      {% if complaint.staff_zone %}
+        <span class="hm-item"><i class="fas fa-map"></i>{{ complaint.staff_zone }}</span>
+      {% endif %}
+    </div>
+    <div class="hc-badges">
+      <span class="bdg bdg-dot {{ sev_cls }}">{{ complaint.severity or 'Medium' }}</span>
+      <span class="bdg {{ st_cls }}">{{ (complaint.status or 'Pending') | capitalize }}</span>
+      {% if is_overdue %}
+        <span class="bdg bs-overdue"><i class="fas fa-clock"></i> Overdue · {{ days_old }}d</span>
+      {% endif %}
+      {% if complaint.escalated %}
+        <span class="bdg bs-escalated"><i class="fas fa-layer-group"></i> Escalated</span>
+      {% endif %}
+      {% if complaint.deadline %}
+        <span class="bdg" style="background:#e3f0ff;color:#1a6ebf;">
+          <i class="fas fa-flag"></i> Due: {{ complaint.deadline.strftime('%d %b') }}
+        </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="hc-right">
+    <div class="p-ring">
+      <span class="pn">{{ complaint.priority_score or 0 }}</span>
+      <span class="pl">Priority</span>
+    </div>
+    {% if days_old <= 2 %}
+      <span class="bdg bd-ok"><i class="fas fa-circle" style="font-size:7px;"></i> {{ days_old }}d old</span>
+    {% elif days_old <= 5 %}
+      <span class="bdg bd-warn"><i class="fas fa-clock"></i> {{ days_old }}d old</span>
+    {% else %}
+      <span class="bdg bd-over"><i class="fas fa-exclamation-circle"></i> {{ days_old }}d old</span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- MAIN GRID -->
+<div class="main-grid">
+
+  <!-- ════ LEFT COLUMN ════ -->
+  <div>
+
+    <!-- STATUS / ASSIGNMENT / DEADLINE -->
+    <div class="panel">
+      <div class="phd">
+        <div class="ph-ico phi-gr"><i class="fas fa-edit"></i></div>
+        <span class="ptitle">Status, Assignment &amp; Deadline</span>
+      </div>
+      <div class="pbody">
+        <form action="/update_status" method="POST">
+          <input type="hidden" name="id"         value="{{ complaint.complaint_id }}">
+          <input type="hidden" name="staff_name" id="snHidden" value="{{ complaint.assigned_staff or '' }}">
+          <input type="hidden" name="reminder"   id="remHidden" value="">
+
+          <!-- Status + Priority row -->
+          <div class="g2">
+            <div class="fld">
+              <label>Update Status</label>
+              <select name="status">
+                <option value="">— Keep current ({{ (complaint.status or 'pending') | capitalize }}) —</option>
+                <option value="pending">Pending</option>
+                <option value="processing">In Progress</option>
+                <option value="resolved">Resolved</option>
+                <option value="escalated">Escalated</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label>Update Priority</label>
+              <select name="priority">
+                <option value="">— Keep current ({{ complaint.severity or '—' }}) —</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Deadline -->
+          <div class="fld">
+            <label>Set / Update Deadline</label>
+            <input type="datetime-local" name="deadline"
+                   value="{{ complaint.deadline.strftime('%Y-%m-%dT%H:%M') if complaint.deadline else '' }}">
+            <div class="fhint">Leave blank to keep existing deadline.</div>
+          </div>
+
+          <!-- Staff picker -->
+          <div class="fld">
+            <label>
+              Reassign Staff 
+              <span class="label-info">
+                Currently: <strong>{{ complaint.assigned_staff or 'Unassigned' }}</strong>
+                {% if complaint.staff_designation %} · {{ complaint.staff_designation }}{% endif %}
+              </span>
+            </label>
+
+            <div class="slist">
+              <!-- Keep current -->
+              <div class="sitem {% if not complaint.staff_id %}on{% endif %}" onclick="pickS('','',this)">
+                <input type="radio" class="si-radio" name="staff_id" value="" {% if not complaint.staff_id %}checked{% endif %}>
+                <div class="si-av" style="background: var(--border); color: var(--muted);"><i class="fas fa-minus"></i></div>
+                <div class="si-inf">
+                  <div class="si-nm" style="color:var(--muted); font-weight: 500;">— Keep current assignment —</div>
+                </div>
+              </div>
+
+              {% set cur_dept = namespace(v='') %}
+              {% for s in staff_list %}
+                {% if s.department != cur_dept.v %}
+                  {% set cur_dept.v = s.department %}
+                  <div class="dept-hd"><i class="fas fa-building"></i> {{ s.department }}</div>
+                {% endif %}
+                
+                <div class="sitem {% if complaint.staff_id == s.id %}on{% endif %}"
+                    onclick="pickS('{{ s.id }}','{{ s.name | replace("'","\\'") }}',this)">
+                  <input type="radio" class="si-radio" name="staff_id" value="{{ s.id }}"
+                        {% if complaint.staff_id == s.id %}checked{% endif %}>
+                  
+                  <div class="si-av">{{ s.name[:2].upper() }}</div>
+                  
+                  <div class="si-inf">
+                    <div class="si-nm">
+                      {{ s.name }}
+                      <span class="si-desig">{{ s.designation }}</span>
+                    </div>
+                    <div class="si-sb">{{ s.zone or 'Zone not set' }}</div>
+                  </div>
+
+                  {% set ld = s.active_load or 0 %}
+                  <span class="lp {% if ld < 3 %}lp-f{% elif ld < 6 %}lp-b{% else %}lp-o{% endif %}">
+                    {{ ld }} tasks
+                  </span>
+                </div>
+              {% else %}
+                <div class="no-staff">No approved staff available.</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Reminder -->
+          <div class="fld">
+            <label>Remind Staff if Unresolved In</label>
+            <div class="rpills">
+              <div class="rpill" onclick="pickR(2,this)"><i class="fas fa-bell"></i> 2 hrs</div>
+              <div class="rpill" onclick="pickR(6,this)"><i class="fas fa-bell"></i> 6 hrs</div>
+              <div class="rpill" onclick="pickR(24,this)"><i class="fas fa-bell"></i> 24 hrs</div>
+              <div class="rpill" onclick="pickR(48,this)"><i class="fas fa-bell"></i> 48 hrs</div>
+              <div class="rpill rpill-cust" onclick="toggleCust()"><i class="fas fa-sliders-h"></i> Custom</div>
+            </div>
+            <div id="custWrap" style="display:none;margin-top:8px;">
+              <input type="number" id="custHrs" min="1" max="720" placeholder="Hours"
+                     style="width:120px;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;"
+                     onchange="pickCustR(this.value)">
+              <span style="font-size:12px;color:var(--muted);margin-left:8px;">hours from now</span>
+            </div>
+            <div class="rconfirm" id="rConfirm">
+              <i class="fas fa-check-circle"></i> <span id="rText"></span>
+            </div>
+          </div>
+
+          <!-- Message to staff -->
+          <div class="fld">
+            <label>Message to Staff <span style="font-weight:400;text-transform:none;">(sent as notification)</span></label>
+            <textarea name="message" placeholder="Write instructions or updates for the assigned staff…"></textarea>
+          </div>
+
+          <!-- Admin notes -->
+          <div class="fld">
+            <label>Internal Admin Notes <span style="font-weight:400;text-transform:none;">(not visible to staff or users)</span></label>
+            <textarea name="admin_note" placeholder="Internal observations, investigation notes…">{{ complaint.admin_notes or '' }}</textarea>
+          </div>
+
+          <div class="brow">
+            <button type="submit" class="btn btn-pr"><i class="fas fa-save"></i> Save Changes</button>
+            <a href="/adminhome" class="btn btn-ot"><i class="fas fa-times"></i> Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ESCALATION -->
+    <div class="panel">
+      <div class="phd">
+        <div class="ph-ico phi-pu"><i class="fas fa-layer-group"></i></div>
+        <span class="ptitle">Escalation Control</span>
+      </div>
+      <div class="pbody">
+
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Designation Hierarchy</div>
+
+        <div class="esc-path">
+          {% for desig in desig_hierarchy %}
+            {% set is_cur  = desig == complaint.staff_designation %}
+            {% set is_next = desig == next_desig %}
+            <div class="ep-step">
+              <div class="ep-dot {% if is_cur %}ep-cur{% elif is_next %}ep-nxt{% else %}ep-off{% endif %}">
+                {% if is_cur %}<i class="fas fa-user"></i>
+                {% elif is_next %}<i class="fas fa-arrow-up"></i>
+                {% else %}{{ loop.index }}{% endif %}
+              </div>
+              <span class="ep-lbl">{{ desig }}</span>
+            </div>
+            {% if not loop.last %}<span class="ep-arr">›</span>{% endif %}
+          {% endfor %}
+        </div>
+
+        <div class="esc-info">
+          {% if complaint.staff_designation %}
+            Current: <strong>{{ complaint.assigned_staff }}</strong> ({{ complaint.staff_designation }})
+            {% if next_desig %}
+              &nbsp;→&nbsp; Next: <strong style="color:#8e44ad;">{{ next_desig }}</strong>
+            {% else %}
+              — Already at the highest level.
+            {% endif %}
+          {% else %}
+            No staff currently assigned.
+          {% endif %}
+        </div>
+
+        {% if complaint.escalated %}
+        <div class="esc-done">
+          <div class="esc-done-t"><i class="fas fa-layer-group"></i> Already escalated</div>
+          <div class="esc-done-b">
+            At: {{ complaint.escalated_at.strftime('%d %b %Y, %H:%M') if complaint.escalated_at else '—' }}<br>
+            {% if complaint.escalation_reason %}Reason: {{ complaint.escalation_reason }}<br>{% endif %}
+            {% if complaint.escalated_from_staff %}Previous staff: {{ complaint.escalated_from_staff }}{% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        <form action="/escalate_complaint/{{ complaint.complaint_id }}" method="POST" style="margin-top:16px;">
+          <div class="fld">
+            <label>Escalation Reason</label>
+            <textarea name="reason" placeholder="Reason for escalation…">{% if is_overdue %}Not resolved within 5 days ({{ days_old }} days pending){% endif %}</textarea>
+          </div>
+          <button type="submit" class="btn btn-pu btn-sm"
+                  {% if not next_desig %}disabled style="opacity:.5;cursor:not-allowed;"{% endif %}>
+            <i class="fas fa-layer-group"></i>
+            {% if next_desig %}Escalate to {{ next_desig }}{% else %}Cannot Escalate Further{% endif %}
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div><!-- /left -->
+
+  <!-- ════ RIGHT COLUMN ════ -->
+  <div>
+
+    <!-- STAFF WORKLOAD -->
+    {% if complaint.assigned_staff %}
+    <div class="panel">
+      <div class="phd">
+        <div class="ph-ico phi-bl"><i class="fas fa-user-tie"></i></div>
+        <span class="ptitle">Assigned Staff Workload</span>
+      </div>
+      <div class="pbody">
+        <div class="wl-row">
+          <div class="wl-av">{{ complaint.assigned_staff[:2].upper() }}</div>
+          <div>
+            <div class="wl-nm">{{ complaint.assigned_staff }}</div>
+            <div class="wl-sb">
+              {{ complaint.staff_designation or 'No designation set' }}<br>
+              {{ complaint.staff_dept or 'No department set' }}<br>
+              Zone: {{ complaint.staff_zone or 'Not set' }}
+            </div>
+          </div>
+        </div>
+
+        {% if workload_data %}
+          {% set tw = [workload_data.total or 0, 1] | max %}
+          <div class="wbar-row">
+            <span class="wbar-lbl">Total</span>
+            <div class="wbar-tr"><div class="wbar-fl wf-g" style="width:100%;"></div></div>
+            <span class="wbar-v">{{ workload_data.total or 0 }}</span>
+          </div>
+          <div class="wbar-row">
+            <span class="wbar-lbl">Pending</span>
+            <div class="wbar-tr"><div class="wbar-fl wf-o" style="width:{{ ((workload_data.pending or 0)/tw*100)|int }}%;"></div></div>
+            <span class="wbar-v">{{ workload_data.pending or 0 }}</span>
+          </div>
+          <div class="wbar-row">
+            <span class="wbar-lbl">In Progress</span>
+            <div class="wbar-tr"><div class="wbar-fl wf-g" style="width:{{ ((workload_data.inprogress or 0)/tw*100)|int }}%;"></div></div>
+            <span class="wbar-v">{{ workload_data.inprogress or 0 }}</span>
+          </div>
+          <div class="wbar-row">
+            <span class="wbar-lbl">Resolved</span>
+            <div class="wbar-tr"><div class="wbar-fl wf-g" style="width:{{ ((workload_data.resolved or 0)/tw*100)|int }}%;"></div></div>
+            <span class="wbar-v">{{ workload_data.resolved or 0 }}</span>
+          </div>
+        {% endif %}
+
+        <div class="srow">
+          <div class="sbox sb-g">
+            <div class="sv">{{ complaint.performance_score or 50 }}</div>
+            <div class="sl">Performance</div>
+          </div>
+          <div class="sbox sb-b">
+            <div class="sv">{{ '%.1f'|format(complaint.avg_rating|float) if complaint.avg_rating else '—' }}</div>
+            <div class="sl">Avg Rating</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- QUICK MESSAGE -->
+    <div class="panel">
+      <div class="phd">
+        <div class="ph-ico phi-tl"><i class="fas fa-paper-plane"></i></div>
+        <span class="ptitle">Quick Message to Staff</span>
+      </div>
+      <div class="pbody">
+        <div class="qbar">
+          <input type="text" class="qi" id="qmInput" placeholder="Type a quick instruction…">
+          <button class="qs" onclick="sendQM()"><i class="fas fa-paper-plane"></i> Send</button>
+        </div>
+        <div class="qok" id="qmOk"><i class="fas fa-check-circle"></i> Message sent to staff.</div>
+        <div class="qtpls">
+          <span class="qtpl-lbl">Templates:</span>
+          <button class="btn btn-ot btn-sm" onclick="tpl('Please resolve this complaint urgently.')">Urgent</button>
+          <button class="btn btn-ot btn-sm" onclick="tpl('Please send a status update immediately.')">Status update</button>
+          <button class="btn btn-ot btn-sm" onclick="tpl('Citizen has re-reported. Please revisit the site.')">Revisit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY TABS -->
+    <div class="panel">
+      <div class="phd">
+        <div class="ph-ico phi-or"><i class="fas fa-history"></i></div>
+        <span class="ptitle">History</span>
+      </div>
+      <div class="pbody">
+        <div class="tnav">
+          <button class="tbtn on" onclick="goTab('notifs',this)">
+            <i class="fas fa-bell"></i> Notifications
+            {% if notif_history %}<span class="cbdg">{{ notif_history|length }}</span>{% endif %}
+          </button>
+          <button class="tbtn" onclick="goTab('activity',this)">
+            <i class="fas fa-stream"></i> Activity
+            {% if activity_log %}<span class="cbdg cbdg-b">{{ activity_log|length }}</span>{% endif %}
+          </button>
+        </div>
+
+        <!-- Notifications -->
+        <div class="tpane on" id="p-notifs">
+          {% for n in notif_history %}
+            {% set nt = n.type or 'system' %}
+            <div class="ni">
+              <div class="ni-ic {% if nt=='assignment' %}ni-as{% elif nt=='reminder' %}ni-re{% elif nt=='escalation' %}ni-es{% else %}ni-mg{% endif %}">
+                {% if nt=='assignment' %}<i class="fas fa-user-plus"></i>
+                {% elif nt=='reminder' %}<i class="fas fa-bell"></i>
+                {% elif nt=='escalation' %}<i class="fas fa-layer-group"></i>
+                {% else %}<i class="fas fa-comment-alt"></i>{% endif %}
+              </div>
+              <div class="ni-bd">
+                <div class="ni-tx">
+                  <span class="nt {% if nt=='assignment' %}nt-as{% elif nt=='reminder' %}nt-re{% elif nt=='escalation' %}nt-es{% else %}nt-mg{% endif %}">{{ nt }}</span>
+                  {{ n.message[:110] }}{% if n.message|length > 110 %}…{% endif %}
+                </div>
+                <div class="ni-mt">
+                  To: {{ n.staff_name or '—' }} ·
+                  {{ n.timestamp.strftime('%d %b, %H:%M') if n.timestamp else '—' }}
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <div class="empty"><i class="fas fa-bell-slash"></i>No notifications sent yet.</div>
+          {% endfor %}
+        </div>
+
+        <!-- Activity -->
+        <div class="tpane" id="p-activity">
+          {% for a in activity_log %}
+            <div class="ai">
+              <div class="ai-dot"></div>
+              <div class="ai-bd">
+                <div class="ai-ac">{{ a.action }}</div>
+                {% if a.notes %}<div class="ai-nt">{{ a.notes }}</div>{% endif %}
+                <div class="ai-tm">
+                  {{ a.staff_name or 'System / Admin' }} ·
+                  {{ a.created_at.strftime('%d %b %Y, %H:%M') if a.created_at else '—' }}
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <div class="empty"><i class="fas fa-clipboard"></i>No activity recorded yet.</div>
+          {% endfor %}
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /right -->
+</div><!-- /main-grid -->
+</div><!-- /wrap -->
+
+<script>
+/* staff pick */
+function pickS(id, name, el) {
+  document.getElementById('snHidden').value = name;
+  document.querySelectorAll('.sitem').forEach(r => r.classList.remove('on'));
+  el.classList.add('on');
+  const r = el.querySelector('input[type=radio]');
+  if (r) r.checked = true;
+}
+
+/* reminder */
+function pickR(h, el) {
+  document.querySelectorAll('.rpill').forEach(p => p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('remHidden').value = h;
+  showRC(`Reminder set · ${h} hour${h>1?'s':''} from now`);
+}
+function toggleCust() {
+  const w = document.getElementById('custWrap');
+  w.style.display = (w.style.display === 'none' || !w.style.display) ? 'block' : 'none';
+}
+function pickCustR(v) {
+  if (v > 0) {
+    document.getElementById('remHidden').value = v;
+    showRC(`Reminder set · ${v} hour${v>1?'s':''} from now`);
+  }
+}
+function showRC(msg) {
+  document.getElementById('rText').textContent = msg;
+  document.getElementById('rConfirm').style.display = 'block';
+}
+
+/* quick message */
+async function sendQM() {
+  const msg = document.getElementById('qmInput').value.trim();
+  const sid = '{{ complaint.staff_id or "" }}';
+  const cid = '{{ complaint.complaint_id }}';
+  if (!msg) { alert('Please type a message first.'); return; }
+  if (!sid) { alert('No staff is assigned to this complaint.'); return; }
+  try {
+    const r = await fetch('/send_notification', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({staff_id: sid, complaint_id: cid, message: msg, type:'admin_message'})
+    });
+    const d = await r.json();
+    if (d.success) {
+      document.getElementById('qmInput').value = '';
+      const ok = document.getElementById('qmOk');
+      ok.style.display = 'block';
+      setTimeout(() => ok.style.display = 'none', 3000);
+    } else { alert('Failed: ' + (d.error||'Unknown')); }
+  } catch (e) { alert('Network error.'); }
+}
+function tpl(t) { document.getElementById('qmInput').value = t; }
+
+/* tabs */
+function goTab(name, btn) {
+  document.querySelectorAll('.tpane').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.tbtn').forEach(b => b.classList.remove('on'));
+  document.getElementById('p-' + name).classList.add('on');
+  btn.classList.add('on');
+}
+</script>
+</body>
+</html>

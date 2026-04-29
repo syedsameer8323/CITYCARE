@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityCare – Feedback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+<style>
+:root{--dark:#0d1f13;--green:#1a4d2e;--mid:#2d6a4f;--accent:#52b788;--light:#d8f3dc;--white:#f8fdf9;--text:#1b2d23;--muted:#5a7a65;--border:#d0e8d8;--font-h:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-b);background:#f0f6f2;color:var(--text);}
+.admin-layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+.cc-sidebar{background:var(--dark);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar-brand{padding:22px 20px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;text-decoration:none;}
+.sidebar-icon{width:36px;height:36px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sidebar-icon i{color:var(--dark);font-size:16px;}
+.sidebar-title{font-family:var(--font-h);font-size:18px;font-weight:700;color:#fff;}
+.sidebar-title span{color:var(--accent);}
+.sidebar-label{font-size:10px;font-weight:600;letter-spacing:1.2px;color:rgba(255,255,255,0.3);text-transform:uppercase;padding:18px 20px 6px;}
+.sidebar-nav{padding:0 10px;flex:1;}
+.sidebar-link{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:rgba(255,255,255,0.65);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:2px;transition:all 0.2s;}
+.sidebar-link i{font-size:14px;width:18px;text-align:center;}
+.sidebar-link:hover{background:rgba(255,255,255,0.07);color:#fff;}
+.sidebar-link.active{background:var(--accent);color:var(--dark);}
+.sidebar-logout{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.07);}
+.sidebar-logout a{display:flex;align-items:center;gap:10px;color:#ff8a80;font-size:14px;text-decoration:none;font-weight:500;padding:10px 14px;border-radius:10px;}
+.sidebar-logout a:hover{background:rgba(255,100,80,0.1);}
+.cc-main{overflow-x:hidden;}
+.cc-topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-title{font-family:var(--font-h);font-size:20px;font-weight:700;}
+.topbar-badge{background:var(--dark);color:var(--accent);font-size:11px;font-weight:700;padding:5px 12px;border-radius:50px;}
+.cc-content{padding:28px;}
+
+/* STATS */
+.fb-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
+.fb-stat{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;}
+.fb-stat-num{font-family:var(--font-h);font-size:32px;font-weight:700;margin-bottom:4px;}
+.fb-stat-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;}
+
+/* CARDS */
+.fb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;}
+.fb-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:22px;transition:box-shadow 0.2s;}
+.fb-card:hover{box-shadow:0 6px 20px rgba(0,0,0,0.08);}
+.fb-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.fb-card-id{font-size:12px;color:var(--muted);font-weight:600;}
+.fb-card-meta{font-size:12px;color:var(--muted);}
+.fb-stars{color:#f39c12;font-size:18px;letter-spacing:2px;margin-bottom:10px;}
+.fb-stars .empty{color:#e0e0e0;}
+.fb-comment{font-size:14px;color:var(--text);line-height:1.65;background:var(--white);border-radius:10px;padding:12px;border:1px solid var(--border);font-style:italic;}
+.fb-complaint-info{display:flex;gap:8px;margin-top:12px;}
+.info-chip{background:var(--light);color:var(--green);font-size:11px;font-weight:600;padding:4px 10px;border-radius:50px;display:flex;align-items:center;gap:4px;}
+.info-chip i{font-size:10px;}
+
+.empty-state{padding:60px;text-align:center;color:var(--muted);}
+.empty-state i{font-size:40px;opacity:0.3;display:block;margin-bottom:12px;}
+</style>
+</head>
+<body>
+
+<div class="admin-layout">
+  <aside class="cc-sidebar">
+    <a class="sidebar-brand" href="/adminhome">
+      <div class="sidebar-icon"><i class="fas fa-recycle"></i></div>
+      <span class="sidebar-title">CITY<span>CARE</span></span>
+    </a>
+    <p class="sidebar-label">Operations</p>
+    <nav class="sidebar-nav">
+      <a class="sidebar-link" href="/adminhome"><i class="fas fa-th-large"></i> Dashboard</a>
+      <a class="sidebar-link" href="/view_complaints"><i class="fas fa-list-ul"></i> All Complaints</a>
+      <a class="sidebar-link" href="/add_questions"><i class="fas fa-brain"></i> Knowledge Base</a>
+      <a class="sidebar-link active" href="/admin_feedback"><i class="fas fa-star"></i> Feedback</a>
+    </nav>
+    <div class="sidebar-logout">
+      <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <div class="cc-main">
+    <header class="cc-topbar">
+      <span class="topbar-title">User Feedback</span>
+      <span class="topbar-badge">&#9733; Avg: {{ avg_rating }}/5</span>
+    </header>
+
+    <div class="cc-content">
+
+      <!-- STATS -->
+      <div class="fb-stats">
+        <div class="fb-stat">
+          <div class="fb-stat-num">{{ feedbacks|length }}</div>
+          <div class="fb-stat-label">Total Reviews</div>
+        </div>
+        <div class="fb-stat">
+          <div class="fb-stat-num" style="color:#f39c12;">{{ avg_rating }}</div>
+          <div class="fb-stat-label">Average Rating</div>
+        </div>
+        <div class="fb-stat">
+          <div class="fb-stat-num" style="color:var(--accent);">
+            {{ feedbacks | selectattr('rating', 'ge', 4) | list | length if feedbacks else 0 }}
+          </div>
+          <div class="fb-stat-label">Positive (4–5 stars)</div>
+        </div>
+      </div>
+
+      {% if feedbacks %}
+      <div class="fb-grid">
+        {% for fb in feedbacks %}
+        {# fb: 0=feedback_id,1=complaint_id,2=userid,3=rating,4=comment,5=submitted_at,6=category,7=location #}
+        <div class="fb-card">
+          <div class="fb-card-header">
+            <div>
+              <div class="fb-card-id">Complaint #{{ fb.complaint_id }} · {{ fb.userid }}</div>
+            </div>
+            <div class="fb-card-meta">{{ fb.submitted_at.strftime('%d %b %Y') if fb.submitted_at else '' }}</div>
+          </div>
+
+          <div class="fb-stars">
+            {% for i in range(1,6) %}
+              {% if i <= fb.rating %}<span>&#9733;</span>
+              {% else %}
+                <span class="empty">&#9733;</span>
+              {% endif %}
+            {% endfor %}
+            <span style="font-size:13px;color:var(--muted);margin-left:6px;font-family:var(--font-b);">{{ fb.rating }}/5</span>
+          </div>
+
+          {% if fb.comment %}
+          <div class="fb-comment">"{{ fb.comment }}"</div>
+          {% else %}
+          <div style="font-size:13px;color:var(--muted);font-style:italic;">No comment left.</div>
+          {% endif %}
+
+          <div class="fb-complaint-info">
+            <span class="info-chip"><i class="fas fa-tag"></i> {{ fb.category }}</span>
+            <span class="info-chip"><i class="fas fa-map-marker-alt"></i> {{ fb.location }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% else %}
+      <div class="empty-state">
+        <i class="fas fa-star"></i>
+        <p>No feedback submitted yet. It will appear here once users rate resolved complaints.</p>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static',filename='assets/js/jquery-3.2.1.min.js')}}"></script>
+<script src="{{ url_for('static',filename='assets/js/bootstrap.min.js')}}"></script>
+</body>
+</html>

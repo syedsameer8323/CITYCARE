@@ -1,0 +1,131 @@
+{% include "user_header.html" %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityCare – Leave Feedback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+<style>
+:root{--dark:#0d1f13;--green:#1a4d2e;--mid:#2d6a4f;--accent:#52b788;--light:#d8f3dc;--white:#f8fdf9;--text:#1b2d23;--muted:#5a7a65;--border:#d0e8d8;--font-h:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-b);background:#f0f6f2;color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+.cc-page-banner{background:var(--green);padding:28px 0 24px;position:relative;overflow:hidden;}
+.cc-page-banner::before{content:'';position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(82,183,136,0.12);}
+.cc-banner-title{font-family:var(--font-h);font-size:24px;font-weight:700;color:#fff;margin-bottom:6px;}
+.cc-breadcrumb{display:flex;align-items:center;gap:8px;list-style:none;font-size:13px;color:rgba(255,255,255,0.6);padding:0;margin:0;}
+.cc-breadcrumb a{color:var(--accent);text-decoration:none;}
+.cc-breadcrumb li::after{content:'/';margin-left:8px;}
+.cc-breadcrumb li:last-child::after{display:none;}
+.cc-breadcrumb li:last-child{color:rgba(255,255,255,0.9);}
+
+.feedback-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 16px;}
+.feedback-card{background:#fff;border:1px solid var(--border);border-radius:24px;padding:48px 44px;max-width:520px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.08);text-align:center;}
+
+.fb-icon{width:72px;height:72px;background:var(--light);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;}
+.fb-icon i{font-size:32px;color:var(--green);}
+.fb-card h2{font-family:var(--font-h);font-size:24px;font-weight:800;margin-bottom:8px;}
+.fb-card p{color:var(--muted);font-size:15px;margin-bottom:32px;line-height:1.65;}
+
+/* STAR RATING */
+.star-group{display:flex;justify-content:center;gap:8px;margin-bottom:8px;}
+.star-group input[type=radio]{display:none;}
+.star-group label{font-size:36px;color:#ddd;cursor:pointer;transition:all 0.15s;line-height:1;}
+.star-group label:hover,
+.star-group label:hover ~ label,
+.star-group input[type=radio]:checked ~ label{color:#ddd;}
+.star-group input[type=radio]:checked + label,
+.star-group label:hover{color:#f39c12;}
+
+/* Reverse star trick */
+.star-group{flex-direction:row-reverse;}
+.star-group label:hover,
+.star-group label:hover ~ label{color:#f39c12;}
+.star-group input[type=radio]:checked ~ label{color:#f39c12;}
+.star-group input[type=radio]:checked + label{color:#f39c12;}
+
+.rating-label{font-size:13px;color:var(--muted);margin-bottom:28px;min-height:20px;font-weight:500;}
+
+.cc-field{margin-bottom:20px;text-align:left;}
+.cc-field label{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;}
+.cc-field textarea{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:var(--font-b);color:var(--text);background:var(--white);resize:none;min-height:110px;transition:border-color 0.2s;}
+.cc-field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(82,183,136,0.15);}
+
+.cc-btn-primary{width:100%;background:var(--green);color:#fff;border:none;padding:14px;border-radius:50px;font-family:var(--font-b);font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:9px;margin-top:4px;}
+.cc-btn-primary:hover{background:var(--mid);transform:translateY(-1px);box-shadow:0 6px 20px rgba(26,77,46,0.28);}
+.cc-btn-skip{display:block;margin-top:14px;font-size:13px;color:var(--muted);text-decoration:none;text-align:center;}
+.cc-btn-skip:hover{color:var(--green);}
+</style>
+</head>
+<body>
+
+<section class="cc-page-banner">
+  <div class="container">
+    <h1 class="cc-banner-title">Leave Feedback</h1>
+    <ul class="cc-breadcrumb">
+      <li><a href="{{ url_for('userhome') }}">Dashboard</a></li>
+      <li><a href="{{ url_for('view_complaints_user') }}">My Complaints</a></li>
+      <li>Feedback</li>
+    </ul>
+  </div>
+</section>
+
+<div class="feedback-wrap">
+  <div class="feedback-card fb-card">
+
+    <div class="fb-icon"><i class="fas fa-star"></i></div>
+    <h2>How did we do?</h2>
+    <p>Your complaint <b>#{{ complaint_id }}</b> has been resolved. We'd love to know how satisfied you are with the service.</p>
+
+    <form action="/submit_feedback2" method="post">
+      <input type="hidden" name="complaint_id" value="{{ complaint_id }}">
+
+      <!-- STAR RATING -->
+      <div class="star-group" id="starGroup">
+        <input type="radio" name="rating" id="s5" value="5" required>
+        <label for="s5" title="Excellent">&#9733;</label>
+        <input type="radio" name="rating" id="s4" value="4">
+        <label for="s4" title="Good">&#9733;</label>
+        <input type="radio" name="rating" id="s3" value="3">
+        <label for="s3" title="Average">&#9733;</label>
+        <input type="radio" name="rating" id="s2" value="2">
+        <label for="s2" title="Poor">&#9733;</label>
+        <input type="radio" name="rating" id="s1" value="1">
+        <label for="s1" title="Very Poor">&#9733;</label>
+      </div>
+      <div class="rating-label" id="ratingLabel">Tap a star to rate</div>
+
+      <div class="cc-field">
+        <label>Comments (optional)</label>
+        <textarea name="comment" placeholder="Tell us about your experience — what went well, or how we could improve..."></textarea>
+      </div>
+
+      <button class="cc-btn-primary" type="submit">
+        <i class="fas fa-paper-plane"></i> Submit Feedback
+      </button>
+
+    </form>
+
+    <a href="{{ url_for('view_complaints_user') }}" class="cc-btn-skip">Skip for now</a>
+
+  </div>
+</div>
+
+{% include "footer.html" %}
+
+<script>
+const labels = ['','Very Poor','Poor','Average','Good','Excellent'];
+document.querySelectorAll('.star-group input[type=radio]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    document.getElementById('ratingLabel').textContent = labels[radio.value] || '';
+  });
+});
+</script>
+<script src="{{ url_for('static',filename='assets/js/jquery-3.2.1.min.js')}}"></script>
+<script src="{{ url_for('static',filename='assets/js/bootstrap.min.js')}}"></script>
+</body>
+</html>

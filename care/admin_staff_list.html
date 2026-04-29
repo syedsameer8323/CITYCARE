@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityCare – Staff Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+<style>
+:root{
+  --cc-dark:#0d1f13;--cc-green:#1a4d2e;--cc-mid:#2d6a4f;
+  --cc-accent:#52b788;--cc-light:#d8f3dc;--cc-white:#f8fdf9;
+  --cc-text:#1b2d23;--cc-muted:#5a7a65;--cc-border:#d0e8d8;
+  --font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:#f0f6f2;color:var(--cc-text);}
+.admin-layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+.cc-sidebar{background:var(--cc-dark);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar-brand{padding:22px 20px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;text-decoration:none;}
+.sidebar-icon{width:36px;height:36px;background:var(--cc-accent);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sidebar-icon i{color:var(--cc-dark);font-size:16px;}
+.sidebar-title{font-family:var(--font-display);font-size:18px;font-weight:700;color:#fff;}
+.sidebar-title span{color:var(--cc-accent);}
+.sidebar-label{font-size:10px;font-weight:600;letter-spacing:1.2px;color:rgba(255,255,255,0.3);text-transform:uppercase;padding:18px 20px 6px;}
+.sidebar-nav{padding:0 10px;flex:1;}
+.sidebar-link{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:rgba(255,255,255,0.65);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:2px;transition:all 0.2s;}
+.sidebar-link i{font-size:14px;width:18px;text-align:center;}
+.sidebar-link:hover{background:rgba(255,255,255,0.07);color:#fff;}
+.sidebar-link.active{background:var(--cc-accent);color:var(--cc-dark);}
+.sidebar-logout{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.07);}
+.sidebar-logout a{display:flex;align-items:center;gap:10px;color:#ff8a80;font-size:14px;text-decoration:none;font-weight:500;padding:10px 14px;border-radius:10px;transition:background 0.2s;}
+.sidebar-logout a:hover{background:rgba(255,100,80,0.1);}
+.cc-main{overflow-x:hidden;}
+.cc-topbar{background:#fff;border-bottom:1px solid var(--cc-border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-title{font-family:var(--font-display);font-size:20px;font-weight:700;}
+.topbar-badge{background:var(--cc-dark);color:var(--cc-accent);font-size:11px;font-weight:700;padding:5px 12px;border-radius:50px;}
+.cc-content{padding:28px;}
+/* Staff cards grid */
+.staff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.staff-card{background:#fff;border:1px solid var(--cc-border);border-radius:16px;overflow:hidden;transition:box-shadow 0.2s;}
+.staff-card:hover{box-shadow:0 8px 24px rgba(0,0,0,0.08);}
+.staff-card.pending{border-left:4px solid #e67e22;}
+.staff-card.approved{border-left:4px solid var(--cc-accent);}
+.sc-header{padding:16px 18px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid #f0f6f2;}
+.sc-avatar{width:46px;height:46px;border-radius:12px;background:var(--cc-light);color:var(--cc-green);font-family:var(--font-display);font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sc-info{flex:1;}
+.sc-name{font-family:var(--font-display);font-size:15px;font-weight:700;margin-bottom:2px;}
+.sc-role{font-size:12px;color:var(--cc-muted);}
+.sc-zone{font-size:11px;color:var(--cc-accent);margin-top:3px;display:flex;align-items:center;gap:4px;}
+.sc-badge{padding:3px 9px;border-radius:50px;font-size:10px;font-weight:700;}
+.sc-badge-approved{background:#e8faf0;color:#1a7a40;}
+.sc-badge-pending{background:#fff3e0;color:#e67e22;}
+.sc-body{padding:14px 18px;}
+/* Grade & score */
+.sc-grade-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.grade-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:50px;font-size:11px;font-weight:700;}
+.grade-s{background:rgba(82,183,136,0.12);color:var(--cc-accent);border:1px solid rgba(82,183,136,0.3);}
+.grade-a{background:#e3f0ff;color:#1a6ebf;border:1px solid #b3d4f5;}
+.grade-b{background:#fef0e0;color:#a04010;border:1px solid #f5d5b0;}
+.grade-c{background:#fdecea;color:#c0392b;border:1px solid #f5c6c6;}
+.stars-mini{display:flex;gap:2px;}
+.stars-mini i{font-size:11px;color:var(--cc-accent);}
+.stars-mini i.empty{color:#ddd;}
+.score-bar-wrap{margin-bottom:12px;}
+.score-bar-label{display:flex;justify-content:space-between;font-size:11px;color:var(--cc-muted);margin-bottom:4px;}
+.score-bar{height:6px;border-radius:3px;background:#eef5f0;}
+.score-bar-fill{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--cc-accent),var(--cc-green));}
+.sc-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
+.sc-stat{text-align:center;background:#f7fcf9;border-radius:8px;padding:8px;}
+.sc-stat-val{font-family:var(--font-display);font-size:18px;font-weight:700;line-height:1;}
+.sc-stat-label{font-size:10px;color:var(--cc-muted);margin-top:2px;}
+.sc-actions{display:flex;gap:8px;}
+.sc-btn{flex:1;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:var(--font-body);text-align:center;text-decoration:none;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.sc-btn-view{background:var(--cc-light);color:var(--cc-green);}
+.sc-btn-view:hover{background:var(--cc-green);color:#fff;}
+.sc-btn-approve{background:#e8faf0;color:#1a7a40;}
+.sc-btn-approve:hover{background:#1a7a40;color:#fff;}
+.sc-btn-danger{background:#fdecea;color:#c0392b;}
+.sc-btn-danger:hover{background:#c0392b;color:#fff;}
+/* Filter tabs */
+.filter-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.filter-tab{padding:7px 16px;border-radius:50px;font-size:13px;font-weight:600;border:1.5px solid var(--cc-border);background:#fff;color:var(--cc-muted);cursor:pointer;transition:all 0.2s;font-family:var(--font-body);}
+.filter-tab.active{background:var(--cc-green);color:#fff;border-color:var(--cc-green);}
+.filter-tab:hover:not(.active){border-color:var(--cc-accent);color:var(--cc-green);}
+/* Section heading */
+.section-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.section-heading h3{font-family:var(--font-display);font-size:18px;font-weight:700;}
+.pending-badge{background:#e74c3c;color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:50px;margin-left:8px;}
+@media(max-width:900px){.admin-layout{grid-template-columns:1fr;}.cc-sidebar{display:none;}}
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="cc-sidebar">
+    <a class="sidebar-brand" href="/adminhome">
+      <div class="sidebar-icon"><i class="fas fa-recycle"></i></div>
+      <span class="sidebar-title">CITY<span>CARE</span></span>
+    </a>
+    <p class="sidebar-label">Operations</p>
+    <nav class="sidebar-nav">
+      <a class="sidebar-link" href="/adminhome"><i class="fas fa-th-large"></i> Dashboard</a>
+      <a class="sidebar-link" href="/view_complaints"><i class="fas fa-list-ul"></i> All Complaints</a>
+      <a class="sidebar-link active" href="/admin/staff"><i class="fas fa-users-cog"></i> Staff Management</a>
+      <a class="sidebar-link" href="/add_questions"><i class="fas fa-database"></i> Knowledge Base</a>
+    </nav>
+    <div class="sidebar-logout">
+      <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <div class="cc-main">
+    <header class="cc-topbar">
+      <span class="topbar-title">Staff Management</span>
+      <span class="topbar-badge"><i class="fas fa-shield-alt" style="font-size:10px;margin-right:5px;"></i> Admin Panel</span>
+    </header>
+
+    <div class="cc-content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+        <div style="padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:16px;background:{{ '#e8faf0' if cat=='success' else '#fdecea' }};color:{{ '#1a7a40' if cat=='success' else '#c0392b' }};border:1px solid {{ '#b2dfca' if cat=='success' else '#f5c6c6' }};">
+          <i class="fas fa-{{ 'check-circle' if cat=='success' else 'exclamation-circle' }}" style="margin-right:8px;"></i>{{ msg }}
+        </div>
+        {% endfor %}
+      {% endwith %}
+
+      <!-- Pending approvals first -->
+      {% set pending_staff = staff_list | selectattr('is_approved', 'equalto', 0) | list %}
+      {% if pending_staff %}
+      <div class="section-heading">
+        <h3>Pending Approval <span class="pending-badge">{{ pending_staff|length }}</span></h3>
+      </div>
+      <div class="staff-grid" style="margin-bottom:28px;">
+        {% for s in pending_staff %}
+        <div class="staff-card pending">
+          <div class="sc-header">
+            <div class="sc-avatar">{{ s.name[:2].upper() }}</div>
+            <div class="sc-info">
+              <div class="sc-name">{{ s.name }}</div>
+              <div class="sc-role">{{ s.designation }} · {{ s.department }}</div>
+              <div class="sc-zone"><i class="fas fa-map-marker-alt"></i>{{ s.zone }}</div>
+            </div>
+            <span class="sc-badge sc-badge-pending">Pending</span>
+          </div>
+          <div class="sc-body">
+            <div style="font-size:12px;color:var(--cc-muted);margin-bottom:12px;">
+              <i class="fas fa-envelope" style="margin-right:4px;"></i>{{ s.email }}<br>
+              <i class="fas fa-phone" style="margin-right:4px;margin-top:4px;display:inline-block;"></i>{{ s.phone }}<br>
+              <i class="fas fa-id-badge" style="margin-right:4px;margin-top:4px;display:inline-block;"></i>{{ s.employee_id }}
+            </div>
+            <div class="sc-actions">
+              <a href="{{ url_for('admin_approve_staff', staff_id=s.id) }}" class="sc-btn sc-btn-approve"><i class="fas fa-check"></i> Approve</a>
+              <a href="{{ url_for('staff_profile', staff_id=s.id) }}" class="sc-btn sc-btn-view"><i class="fas fa-eye"></i> View</a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Approved Staff -->
+      <div class="section-heading">
+        <h3>Active Staff</h3>
+      </div>
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="filterStaff('all',this)">All</button>
+        <button class="filter-tab" onclick="filterStaff('elite',this)">Elite (S)</button>
+        <button class="filter-tab" onclick="filterStaff('excellent',this)">Excellent (A)</button>
+        <button class="filter-tab" onclick="filterStaff('good',this)">Good (B/C)</button>
+      </div>
+      <div class="staff-grid" id="staffGrid">
+        {% for s in staff_list if s.is_approved %}
+        {% set score = s.performance_score or 0 %}
+        {% set grade = 'S' if score >= 90 else 'A' if score >= 75 else 'B' if score >= 55 else 'C' %}
+        <div class="staff-card approved" data-grade="{{ grade }}">
+          <div class="sc-header">
+            <div class="sc-avatar">{{ s.name[:2].upper() }}</div>
+            <div class="sc-info">
+              <div class="sc-name">{{ s.name }}</div>
+              <div class="sc-role">{{ s.designation }} · {{ s.department }}</div>
+              <div class="sc-zone"><i class="fas fa-map-marker-alt"></i>{{ s.zone }}</div>
+            </div>
+            <span class="sc-badge sc-badge-approved">Active</span>
+          </div>
+          <div class="sc-body">
+            <div class="sc-grade-row">
+              <span class="grade-chip grade-{{ grade.lower() }}">
+                <i class="fas fa-{{ 'trophy' if grade == 'S' else 'medal' if grade == 'A' else 'thumbs-up' if grade == 'B' else 'seedling' }}"></i>
+                Grade {{ grade }}
+              </span>
+              <div class="stars-mini">
+                {% set stars = ((s.avg_rating or 0) | round | int) %}
+                {% for i in range(5) %}
+                  <i class="fas fa-star {% if i >= stars %}empty{% endif %}"></i>
+                {% endfor %}
+                <span style="font-size:11px;color:var(--cc-muted);margin-left:4px;">{{ "%.1f"|format(s.avg_rating or 0) }}</span>
+              </div>
+            </div>
+            <div class="score-bar-wrap">
+              <div class="score-bar-label">
+                <span>Performance Score</span><span style="font-weight:700;color:var(--cc-green);">{{ score }}/100</span>
+              </div>
+              <div class="score-bar"><div class="score-bar-fill" style="width:{{ score }}%;"></div></div>
+            </div>
+            <div class="sc-stats">
+              <div class="sc-stat">
+                <div class="sc-stat-val" style="color:var(--cc-green);">{{ s.resolved_complaints or 0 }}</div>
+                <div class="sc-stat-label">Resolved</div>
+              </div>
+              <div class="sc-stat">
+                <div class="sc-stat-val" style="color:#e67e22;">{{ s.active_complaints or 0 }}</div>
+                <div class="sc-stat-label">Active</div>
+              </div>
+              <div class="sc-stat">
+                <div class="sc-stat-val" style="color:#1a6ebf;">{{ s.total_ratings or 0 }}</div>
+                <div class="sc-stat-label">Reviews</div>
+              </div>
+            </div>
+            <div class="sc-actions">
+              <a href="{{ url_for('staff_profile', staff_id=s.id) }}" class="sc-btn sc-btn-view" target="_blank"><i class="fas fa-user"></i> Profile</a>
+              <a href="/view_complaints?staff={{ s.id }}" class="sc-btn sc-btn-view"><i class="fas fa-clipboard-list"></i> Complaints</a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function filterStaff(type, btn){
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#staffGrid .staff-card').forEach(card => {
+    const grade = card.dataset.grade;
+    if(type === 'all') card.style.display = '';
+    else if(type === 'elite')     card.style.display = grade === 'S' ? '' : 'none';
+    else if(type === 'excellent') card.style.display = grade === 'A' ? '' : 'none';
+    else if(type === 'good')      card.style.display = (grade === 'B' || grade === 'C') ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

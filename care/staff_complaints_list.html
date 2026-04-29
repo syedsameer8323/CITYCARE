@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityCare – My Complaints</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/all.min.css')}}">
+<style>
+:root{
+  --dark:#0d1f13;--green:#1a4d2e;--mid:#2d6a4f;
+  --accent:#52b788;--light:#d8f3dc;--lighter:#edf7f0;
+  --white:#f8fdf9;--text:#1b2d23;--muted:#5a7a65;--border:#d0e8d8;
+  --font-h:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-b);background:#eef5f0;color:var(--text);}
+
+/* ── SIDEBAR LAYOUT ── */
+.admin-layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+.cc-sidebar{background:#0d1f13;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar-brand{padding:22px 20px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;text-decoration:none;}
+.sidebar-icon{width:36px;height:36px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sidebar-icon i{color:var(--dark);font-size:16px;}
+.sidebar-title{font-family:var(--font-h);font-size:18px;font-weight:700;color:#fff;}
+.sidebar-title span{color:var(--accent);}
+.sidebar-label{font-size:10px;font-weight:600;letter-spacing:1.2px;color:rgba(255,255,255,0.3);text-transform:uppercase;padding:18px 20px 6px;}
+.sidebar-nav{padding:0 10px;flex:1;}
+.sidebar-link{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:rgba(255,255,255,0.65);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:2px;transition:all 0.2s;}
+.sidebar-link i{font-size:14px;width:18px;text-align:center;}
+.sidebar-link:hover{background:rgba(255,255,255,0.07);color:#fff;}
+.sidebar-link.active{background:var(--accent);color:var(--dark);}
+.sidebar-profile{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;}
+.sidebar-avatar{width:36px;height:36px;border-radius:10px;background:var(--accent);color:var(--dark);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.sidebar-user-name{font-size:13px;font-weight:600;color:#fff;margin-bottom:2px;}
+.sidebar-user-role{font-size:11px;color:rgba(255,255,255,0.4);}
+.sidebar-logout{padding:8px 20px 16px;}
+.sidebar-logout a{display:flex;align-items:center;gap:10px;color:#ff8a80;font-size:13px;text-decoration:none;font-weight:500;padding:8px 14px;border-radius:10px;transition:background 0.2s;}
+.sidebar-logout a:hover{background:rgba(255,100,80,0.1);}
+
+/* ── MAIN ── */
+.cc-main{overflow-x:hidden;}
+.cc-topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-title{font-family:var(--font-h);font-size:20px;font-weight:700;}
+.cc-content{padding:28px;}
+
+/* ── FILTER TABS ── */
+.filter-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.filter-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+.filter-tab{padding:7px 16px;border-radius:50px;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;transition:all 0.2s;font-family:var(--font-b);text-decoration:none;}
+.filter-tab:hover{border-color:var(--accent);color:var(--green);}
+.filter-tab.active{background:var(--green);color:#fff;border-color:var(--green);}
+.filter-count{font-size:12px;color:var(--muted);font-weight:500;}
+
+/* ── COMPLAINTS TABLE ── */
+.table-card{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+.table-card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.table-card-header h4{font-family:var(--font-h);font-size:15px;font-weight:700;margin:0;display:flex;align-items:center;gap:8px;}
+.table-card-header h4 i{color:var(--accent);}
+.cc-table{width:100%;border-collapse:collapse;}
+.cc-table thead{background:#f7fcf9;}
+.cc-table thead th{padding:11px 14px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
+.cc-table tbody tr{border-bottom:1px solid #f0f6f2;transition:background 0.15s;}
+.cc-table tbody tr:last-child{border-bottom:none;}
+.cc-table tbody tr:hover{background:#f7fcf9;}
+.cc-table td{padding:12px 14px;font-size:13px;vertical-align:middle;}
+
+/* ── BADGES ── */
+.sev-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:50px;font-size:11px;font-weight:700;}
+.sev-badge::before{content:'';width:6px;height:6px;border-radius:50%;}
+.sev-critical{background:#fdecea;color:#c0392b;}.sev-critical::before{background:#e74c3c;}
+.sev-high{background:#fef0e0;color:#a04010;}.sev-high::before{background:#e67e22;}
+.sev-medium{background:#fef9e7;color:#9a6000;}.sev-medium::before{background:#f39c12;}
+.sev-low{background:#e8faf0;color:#1a7a40;}.sev-low::before{background:#2ecc71;}
+.status-badge{display:inline-block;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;}
+.status-pending{background:#fff3e0;color:#e67e22;}
+.status-resolved{background:#e8faf0;color:#1a7a40;}
+.status-in-progress,.status-inprogress{background:#e3f0ff;color:#1a6ebf;}
+
+/* ── SCORE BAR ── */
+.score-wrap{display:flex;align-items:center;gap:7px;}
+.score-bar{height:5px;width:60px;border-radius:3px;background:var(--light);flex-shrink:0;}
+.score-bar-fill{height:5px;border-radius:3px;background:var(--accent);}
+.score-val{font-size:12px;font-weight:700;color:var(--green);}
+
+/* ── ACTION BUTTONS ── */
+.act-btn{padding:5px 13px;border-radius:7px;font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.act-manage{background:var(--light);color:var(--green);}
+.act-manage:hover{background:var(--green);color:#fff;}
+
+/* ── STATS STRIP ── */
+.stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.strip-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;}
+.strip-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;}
+.strip-info .strip-val{font-family:var(--font-h);font-size:24px;font-weight:700;line-height:1;}
+.strip-info .strip-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;}
+.si-all{background:#e3f0ff;color:#1a6ebf;}
+.si-pending{background:#fff3e0;color:#e67e22;}
+.si-progress{background:#f3e8ff;color:#6b30b5;}
+.si-resolved{background:#e8faf0;color:var(--green);}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:56px 20px;color:var(--muted);}
+.empty-state i{font-size:44px;opacity:0.2;display:block;margin-bottom:14px;}
+.empty-state h5{font-size:15px;font-weight:600;margin-bottom:6px;color:var(--text);}
+.empty-state p{font-size:13px;}
+
+@media(max-width:900px){.admin-layout{grid-template-columns:1fr;}.cc-sidebar{display:none;}.stats-strip{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="cc-sidebar">
+    <a class="sidebar-brand" href="{{ url_for('staff_home') }}">
+      <div class="sidebar-icon"><i class="fas fa-recycle"></i></div>
+      <span class="sidebar-title">CITY<span>CARE</span></span>
+    </a>
+    <p class="sidebar-label">Staff Menu</p>
+    <nav class="sidebar-nav">
+      <a class="sidebar-link" href="{{ url_for('staff_home') }}"><i class="fas fa-th-large"></i> Dashboard</a>
+      <a class="sidebar-link active" href="{{ url_for('staff_complaints') }}"><i class="fas fa-clipboard-list"></i> My Complaints</a>
+      <a class="sidebar-link" href="{{ url_for('staff_notifications') }}">
+        <i class="fas fa-bell"></i> Notifications
+      </a>
+      <a class="sidebar-link" href="{{ url_for('staff_profile', staff_id=session.get('staff_id')) }}">
+        <i class="fas fa-user-circle"></i> My Profile
+      </a>
+    </nav>
+    <div class="sidebar-profile">
+      <div class="sidebar-avatar">{{ session.get('staff_name','S')[:2].upper() }}</div>
+      <div>
+        <div class="sidebar-user-name">{{ session.get('staff_name','Staff') }}</div>
+        <div class="sidebar-user-role">Field Staff</div>
+      </div>
+    </div>
+    <div class="sidebar-logout">
+      <a href="{{ url_for('staff_logout') }}"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="cc-main">
+    <header class="cc-topbar">
+      <span class="topbar-title">My Complaints</span>
+      <a href="{{ url_for('staff_home') }}"
+         style="font-size:13px;color:var(--green);text-decoration:none;font-weight:600;display:flex;align-items:center;gap:5px;">
+        <i class="fas fa-arrow-left" style="font-size:11px;"></i> Back to Dashboard
+      </a>
+    </header>
+
+    <div class="cc-content">
+
+      <!-- Stats strip -->
+      {% set total_c    = complaints | length %}
+      {% set pending_c  = complaints | selectattr('status','equalto','Pending')     | list | length %}
+      {% set progress_c = complaints | selectattr('status','equalto','In Progress') | list | length %}
+      {% set resolved_c = complaints | selectattr('status','equalto','Resolved')    | list | length %}
+
+      <div class="stats-strip">
+        <div class="strip-card">
+          <div class="strip-icon si-all"><i class="fas fa-inbox"></i></div>
+          <div class="strip-info">
+            <div class="strip-val">{{ total_c }}</div>
+            <div class="strip-label">Total Assigned</div>
+          </div>
+        </div>
+        <div class="strip-card">
+          <div class="strip-icon si-pending"><i class="fas fa-clock"></i></div>
+          <div class="strip-info">
+            <div class="strip-val">{{ pending_c }}</div>
+            <div class="strip-label">Pending</div>
+          </div>
+        </div>
+        <div class="strip-card">
+          <div class="strip-icon si-progress"><i class="fas fa-wrench"></i></div>
+          <div class="strip-info">
+            <div class="strip-val">{{ progress_c }}</div>
+            <div class="strip-label">In Progress</div>
+          </div>
+        </div>
+        <div class="strip-card">
+          <div class="strip-icon si-resolved"><i class="fas fa-check-double"></i></div>
+          <div class="strip-info">
+            <div class="strip-val">{{ resolved_c }}</div>
+            <div class="strip-label">Resolved</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <div class="filter-tabs">
+          <a href="{{ url_for('staff_complaints') }}"
+             class="filter-tab {{ 'active' if status_filter == 'all' else '' }}">
+            All <span style="opacity:0.6;">({{ total_c }})</span>
+          </a>
+          <a href="{{ url_for('staff_complaints', status='Pending') }}"
+             class="filter-tab {{ 'active' if status_filter == 'Pending' else '' }}">
+            Pending
+          </a>
+          <a href="{{ url_for('staff_complaints', status='In Progress') }}"
+             class="filter-tab {{ 'active' if status_filter == 'In Progress' else '' }}">
+            In Progress
+          </a>
+          <a href="{{ url_for('staff_complaints', status='Resolved') }}"
+             class="filter-tab {{ 'active' if status_filter == 'Resolved' else '' }}">
+            Resolved
+          </a>
+        </div>
+        <span class="filter-count">
+          Showing {{ complaints | length }} complaint{{ 's' if complaints | length != 1 }}
+        </span>
+      </div>
+
+      <!-- Table -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <h4><i class="fas fa-clipboard-list"></i> Complaints</h4>
+        </div>
+        {% if complaints %}
+        <div style="overflow-x:auto;">
+          <table class="cc-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Category</th>
+                <th>Location</th>
+                <th>Severity</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in complaints %}
+              <tr>
+                <td><b style="color:var(--green);">#{{ c['complaint_id'] }}</b></td>
+                <td>
+                  <div style="font-weight:600;font-size:13px;">{{ c['category'] or '—' }}</div>
+                  {% if c['user_name'] %}
+                  <div style="font-size:11px;color:var(--muted);">{{ c['user_name'] }}</div>
+                  {% endif %}
+                </td>
+                <td>
+                  <i class="fas fa-map-marker-alt"
+                     style="color:var(--accent);font-size:10px;margin-right:3px;"></i>
+                  {{ c['location'] or '—' }}
+                </td>
+                <td>
+                  {% set sev = c['severity'] if c['severity'] else 'Medium' %}
+                  <span class="sev-badge sev-{{ sev.lower() }}">{{ sev }}</span>
+                </td>
+                <td>
+                  <div class="score-wrap">
+                    <div class="score-bar">
+                      <div class="score-bar-fill"
+                           style="width:{{ [[((c['priority_score'] or 0)/20*100)|int,100]|min,0]|max }}%;">
+                      </div>
+                    </div>
+                    <span class="score-val">{{ c['priority_score'] or 0 }}</span>
+                  </div>
+                </td>
+                <td>
+                  {% set st = (c['status'] or 'pending').lower().replace(' ','-') %}
+                  <span class="status-badge status-{{ st }}">
+                    {{ c['status'] or 'Pending' }}
+                  </span>
+                </td>
+                <td style="font-size:12px;color:var(--muted);">
+                  {{ c['created_at'].strftime('%d %b %Y') if c['created_at'] else '—' }}
+                </td>
+                <td>
+                  <a href="{{ url_for('staff_manage_complaint', complaint_id=c['complaint_id']) }}"
+                     class="act-btn act-manage">
+                    <i class="fas fa-wrench"></i> Manage
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <i class="fas fa-clipboard-check"></i>
+          <h5>No complaints found</h5>
+          <p>
+            {% if status_filter != 'all' %}
+              No {{ status_filter }} complaints. <a href="{{ url_for('staff_complaints') }}" style="color:var(--green);">View all</a>
+            {% else %}
+              No complaints have been assigned to you yet.
+            {% endif %}
+          </p>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

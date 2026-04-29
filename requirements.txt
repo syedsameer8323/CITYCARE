@@ -1,0 +1,7 @@
+Flask
+mysql-connector-python
+Werkzeug
+scikit-learn
+nltk
+requests
+gunicorn
