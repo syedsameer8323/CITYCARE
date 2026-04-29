@@ -27,13 +27,13 @@ nltk.download('punkt', quiet=True)
 
 # ── App setup ──────────────────────────────────────────────────────
 app = Flask(__name__)
-app.secret_key = "citycare_secret_2024"
+app.secret_key = "xxx"
 app.config['UPLOAD_FOLDER'] = './static/pictures/'
 
 # ── Email config ───────────────────────────────────────────────────
 EMAIL_ENABLED  = True
 EMAIL_SENDER   = "syedsameer8323@gmail.com"
-EMAIL_PASSWORD = "bqrm obpn jvva skgf"   # Gmail App Password
+EMAIL_PASSWORD = "xxxx xxxx xxxx xxxx"   # Gmail App Password
 
 # ── Anthropic AI config ────────────────────────────────────────────
 ANTHROPIC_API_KEY = "sk-ant-your-key-here"
@@ -75,11 +75,24 @@ SEVERITY_MAP  = {'Critical': 10, 'High': 7, 'Medium': 4, 'Low': 1}
 #  DATABASE
 # ══════════════════════════════════════════════════════════════════
 
+# def database():
+#     con = mysql.connector.connect(
+#         user="root", password="root",
+#         host="localhost", port="3306",
+#         database="waste_management_system"
+#     )
+#     return con, con.cursor(dictionary=True)
+
+import os
+import mysql.connector
+
 def database():
     con = mysql.connector.connect(
-        user="root", password="root",
-        host="localhost", port="3306",
-        database="waste_management_system"
+        host=os.environ.get("DB_HOST"),
+        user=os.environ.get("DB_USER"),
+        password=os.environ.get("DB_PASSWORD"),
+        database=os.environ.get("DB_NAME"),
+        port=int(os.environ.get("DB_PORT"))
     )
     return con, con.cursor(dictionary=True)
 
@@ -2020,4 +2033,5 @@ def rate_staff(complaint_id):
     return redirect(url_for('userhome'))
 
 if __name__ == '__main__':
-    app.run(host="localhost", port=5678, debug=True)
+    app.run()
+    # app.run(host="localhost", port=5678, debug=True)
