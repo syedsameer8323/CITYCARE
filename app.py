@@ -22,8 +22,8 @@ import requests as http_requests
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-import nltk
-nltk.download('punkt', quiet=True)
+# import nltk
+# nltk.download('punkt', quiet=True)
 import logging
 logging.basicConfig(level=logging.DEBUG)
 # ── App setup ──────────────────────────────────────────────────────
@@ -35,11 +35,12 @@ app.config['UPLOAD_FOLDER'] = './static/pictures/'
 # ── Email config ───────────────────────────────────────────────────
 EMAIL_ENABLED  = True
 EMAIL_SENDER   = "syedsameer8323@gmail.com"
-EMAIL_PASSWORD = "bqrm obpn jvva skgf"   # Gmail App Password
+EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
+# EMAIL_PASSWORD = "bqrm obpn jvva skgf"   # Gmail App Password
 
 # ── Anthropic AI config ────────────────────────────────────────────
-ANTHROPIC_API_KEY = "sk-ant-your-key-here"
-AI_ENABLED        = False
+# ANTHROPIC_API_KEY = "sk-ant-your-key-here"
+# AI_ENABLED        = False
 
 # ── Staff Designation Hierarchy (lowest index = lowest rank) ──────
 DESIGNATION_HIERARCHY = [
