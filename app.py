@@ -104,7 +104,6 @@ import mysql.connector
 def database():
     print("DB HOST:", os.environ.get("DB_HOST"))
     try:
-
         con = mysql.connector.connect(
             host=os.environ.get("DB_HOST"),
             user=os.environ.get("DB_USER"),
@@ -116,7 +115,7 @@ def database():
 
     except Exception as e:
         print("DATABASE ERROR:", e)
-        return None, None
+        raise e   # 👈 VERY IMPORTANT
 
 
 # import os
