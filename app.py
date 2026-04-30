@@ -22,8 +22,11 @@ import requests as http_requests
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# import nltk
-# nltk.download('punkt', quiet=True)
+import nltk
+try:
+    nltk.data.find('tokenizers/punkt')
+except:
+    nltk.download('punkt')
 import logging
 logging.basicConfig(level=logging.DEBUG)
 # ── App setup ──────────────────────────────────────────────────────
