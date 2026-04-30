@@ -28,8 +28,8 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 # ── App setup ──────────────────────────────────────────────────────
 app = Flask(__name__)
-app.secret_key = "citycare_secret_2024"
-# app.secret_key = os.environ.get("SECRET_KEY", "citycare_secret_2024")
+# app.secret_key = "citycare_secret_2024"
+app.secret_key = os.environ.get("SECRET_KEY", "citycare_secret_2024")
 app.config['UPLOAD_FOLDER'] = './static/pictures/'
 
 # ── Email config ───────────────────────────────────────────────────
@@ -107,7 +107,7 @@ def database():
         user=os.environ.get("DB_USER"),
         password=os.environ.get("DB_PASSWORD"),
         database=os.environ.get("DB_NAME"),
-        port=int(os.environ.get("DB_PORT", 3306))
+        port=int(os.environ.get("DB_PORT", 30352))
     )
     return con, con.cursor(dictionary=True)
 
