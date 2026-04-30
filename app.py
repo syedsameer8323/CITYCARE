@@ -19,15 +19,16 @@ from email.mime.multipart import MIMEMultipart
 
 import requests as http_requests
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+# from sklearn.feature_extraction.text import TfidfVectorizer
+# from sklearn.metrics.pairwise import cosine_similarity
 
-import nltk
-try:
-    nltk.data.find('tokenizers/punkt')
-except:
-    nltk.download('punkt')
-import logging
+# import nltk
+# try:
+#     nltk.data.find('tokenizers/punkt')
+# except:
+#     nltk.download('punkt')
+# import logging
+
 logging.basicConfig(level=logging.DEBUG)
 # ── App setup ──────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -1644,42 +1645,56 @@ def chatbot():
 
 @app.route('/ask', methods=['POST'])
 def ask_question():
-    data    = request.json
+    data = request.json
     message = data.get('question', '').strip()
-    history = data.get('history', [])
+
     if not message:
         return jsonify({"answer": "Please ask a valid question.", "source": "error"})
-    if AI_ENABLED:
-        ai_answer = ask_claude(message, history[-10:])
-        if ai_answer:
-            return jsonify({"answer": ai_answer, "source": "ai"})
-    return jsonify({"answer": find_best_match(message.lower()), "source": "db"})
 
-_qa_data = None
+    return jsonify({
+        "answer": "Chatbot temporarily disabled.",
+        "source": "static"
+    })
 
-def fetch_data():
-    global _qa_data
-    con, cur = database()
-    cur.execute("SELECT question, answer FROM questions")
-    _qa_data = [(r['question'], r['answer']) for r in cur.fetchall()]
-    con.close()
 
-def find_best_match(user_question):
-    global _qa_data
-    if _qa_data is None:
-        fetch_data()
-    if not _qa_data:
-        return "No knowledge base entries yet."
-    questions  = [r[0] for r in _qa_data]
-    answers    = [r[1] for r in _qa_data]
-    vectorizer = TfidfVectorizer().fit_transform(questions + [user_question])
-    vectors    = vectorizer.toarray()
-    sim        = cosine_similarity([vectors[-1]], vectors[:-1])
-    idx        = sim.argmax()
-    if sim[0][idx] > 0.5:
-        return answers[idx]
-    return ("I'm not sure about that. Try asking about waste categories, "
-            "recycling, composting, or how to use CityCare.")
+# @app.route('/ask', methods=['POST'])
+# def ask_question():
+#     data    = request.json
+#     message = data.get('question', '').strip()
+#     history = data.get('history', [])
+#     if not message:
+#         return jsonify({"answer": "Please ask a valid question.", "source": "error"})
+#     if AI_ENABLED:
+#         ai_answer = ask_claude(message, history[-10:])
+#         if ai_answer:
+#             return jsonify({"answer": ai_answer, "source": "ai"})
+#     return jsonify({"answer": find_best_match(message.lower()), "source": "db"})
+
+# _qa_data = None
+
+# def fetch_data():
+#     global _qa_data
+#     con, cur = database()
+#     cur.execute("SELECT question, answer FROM questions")
+#     _qa_data = [(r['question'], r['answer']) for r in cur.fetchall()]
+#     con.close()
+
+# def find_best_match(user_question):
+#     global _qa_data
+#     if _qa_data is None:
+#         fetch_data()
+#     if not _qa_data:
+#         return "No knowledge base entries yet."
+#     questions  = [r[0] for r in _qa_data]
+#     answers    = [r[1] for r in _qa_data]
+#     vectorizer = TfidfVectorizer().fit_transform(questions + [user_question])
+#     vectors    = vectorizer.toarray()
+#     sim        = cosine_similarity([vectors[-1]], vectors[:-1])
+#     idx        = sim.argmax()
+#     if sim[0][idx] > 0.5:
+#         return answers[idx]
+#     return ("I'm not sure about that. Try asking about waste categories, "
+#             "recycling, composting, or how to use CityCare.")
 
 # ══════════════════════════════════════════════════════════════════
 #  STAFF AUTH
