@@ -27,8 +27,7 @@ import requests as http_requests
 #     nltk.data.find('tokenizers/punkt')
 # except:
 #     nltk.download('punkt')
-# import logging
-
+import logging
 logging.basicConfig(level=logging.DEBUG)
 # ── App setup ──────────────────────────────────────────────────────
 app = Flask(__name__)
