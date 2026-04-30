@@ -102,14 +102,21 @@ import os
 import mysql.connector
 
 def database():
-    con = mysql.connector.connect(
-        host=os.environ.get("DB_HOST"),
-        user=os.environ.get("DB_USER"),
-        password=os.environ.get("DB_PASSWORD"),
-        database=os.environ.get("DB_NAME"),
-        port=int(os.environ.get("DB_PORT", 30352))
-    )
-    return con, con.cursor(dictionary=True)
+    print("DB HOST:", os.environ.get("DB_HOST"))
+    try:
+
+        con = mysql.connector.connect(
+            host=os.environ.get("DB_HOST"),
+            user=os.environ.get("DB_USER"),
+            password=os.environ.get("DB_PASSWORD"),
+            database=os.environ.get("DB_NAME"),
+            port=int(os.environ.get("DB_PORT", 3306))
+        )
+        return con, con.cursor(dictionary=True)
+
+    except Exception as e:
+        print("DATABASE ERROR:", e)
+        return None, None
 
 
 # import os
@@ -2092,7 +2099,11 @@ def rate_staff(complaint_id):
     flash('Thank you for your rating!', 'success')
     return redirect(url_for('userhome'))
 
+# if __name__ == '__main__':
+#     # app.run()
+#     app.run(host="localhost", port=5678, debug=True)
+#     # app.run(debug=True, port=5078)
+
 if __name__ == '__main__':
-    # app.run()
-    app.run(host="localhost", port=5678, debug=True)
-    # app.run(debug=True, port=5078)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
