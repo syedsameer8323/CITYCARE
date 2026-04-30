@@ -24,16 +24,18 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 import nltk
 nltk.download('punkt', quiet=True)
-
+import logging
+logging.basicConfig(level=logging.DEBUG)
 # ── App setup ──────────────────────────────────────────────────────
 app = Flask(__name__)
-app.secret_key = "xxx"
+app.secret_key = "citycare_secret_2024"
+# app.secret_key = os.environ.get("SECRET_KEY", "citycare_secret_2024")
 app.config['UPLOAD_FOLDER'] = './static/pictures/'
 
 # ── Email config ───────────────────────────────────────────────────
 EMAIL_ENABLED  = True
 EMAIL_SENDER   = "syedsameer8323@gmail.com"
-EMAIL_PASSWORD = "xxxx xxxx xxxx xxxx"   # Gmail App Password
+EMAIL_PASSWORD = "bqrm obpn jvva skgf"   # Gmail App Password
 
 # ── Anthropic AI config ────────────────────────────────────────────
 ANTHROPIC_API_KEY = "sk-ant-your-key-here"
@@ -83,6 +85,19 @@ SEVERITY_MAP  = {'Critical': 10, 'High': 7, 'Medium': 4, 'Low': 1}
 #     )
 #     return con, con.cursor(dictionary=True)
 
+
+# def database():
+#     import mysql.connector
+#     con = mysql.connector.connect(
+#         host="switchback.proxy.rlwy.net",
+#         user="root",
+#         password="pNIrjETgXJlTuqixHAJayVycMJUBpXnM",
+#         database="waste_management_system",
+#         port=30352
+#     )
+#     return con, con.cursor(dictionary=True)
+
+
 import os
 import mysql.connector
 
@@ -92,9 +107,52 @@ def database():
         user=os.environ.get("DB_USER"),
         password=os.environ.get("DB_PASSWORD"),
         database=os.environ.get("DB_NAME"),
-        port=int(os.environ.get("DB_PORT"))
+        port=int(os.environ.get("DB_PORT", 3306))
     )
     return con, con.cursor(dictionary=True)
+
+
+# import os
+# import mysql.connector
+
+# def database():
+#     try:
+#         if os.environ.get("DB_HOST"):  # Production (Render)
+#             con = mysql.connector.connect(
+#                 host=os.environ.get("DB_HOST"),
+#                 user=os.environ.get("DB_USER"),
+#                 password=os.environ.get("DB_PASSWORD"),
+#                 database=os.environ.get("DB_NAME"),
+#                 port=int(os.environ.get("DB_PORT", 3306))
+                
+#             )
+#         else:  # Local environment
+#             con = mysql.connector.connect(
+#                 host="localhost",
+#                 user="root",
+#                 password="root",
+#                 database="waste_management_system",
+#                 port=3306
+#             )
+
+#         return con, con.cursor(dictionary=True)
+
+#     except Exception as e:
+#         print("DB ERROR:", e)
+#         raise e
+# import os
+# import mysql.connector
+
+# def database():
+#     con = mysql.connector.connect(
+#         host=os.environ.get("DB_HOST"),
+#         user=os.environ.get("DB_USER"),
+#         password=os.environ.get("DB_PASSWORD"),
+#         database=os.environ.get("DB_NAME"),
+#         port=int(os.environ.get("DB_PORT"))
+#     )
+#     return con, con.cursor(dictionary=True)
+
 
 # ══════════════════════════════════════════════════════════════════
 #  HELPERS
@@ -1630,6 +1688,7 @@ def staff_register():
         notify = request.form.get('notify_pref', 'both')
         pw     = request.form.get('password', '')
         pw2    = request.form.get('confirm_password', '')
+        
         if pw != pw2:
             flash('Passwords do not match.', 'danger')
             return redirect(url_for('staff_register'))
@@ -1649,6 +1708,7 @@ def staff_register():
                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
             (name, emp_id, email, phone, dept, desig, zone,
              notify, generate_password_hash(pw))
+
         )
         con.commit()
         con.close()
@@ -2033,5 +2093,6 @@ def rate_staff(complaint_id):
     return redirect(url_for('userhome'))
 
 if __name__ == '__main__':
-    app.run()
-    # app.run(host="localhost", port=5678, debug=True)
+    # app.run()
+    app.run(host="localhost", port=5678, debug=True)
+    # app.run(debug=True, port=5078)

@@ -61,8 +61,8 @@ body{font-family:var(--font-b);background:#eef5f0;color:var(--text);min-height:1
       <span class="staff-tag"><i class="fas fa-shield-alt"></i> Field Staff Portal</span>
     </div>
     <div class="login-body">
-      {% with messages = get_flashed_messages(category_filter=["danger", "success"]) %}
-        {% for cat, msg in messages %}
+      {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for cat, msg in messages %}
         <div class="cc-alert cc-alert-{{ cat }}">
           <i class="fas fa-{{ 'check-circle' if cat == 'success' else 'exclamation-circle' }}"></i>{{ msg }}
         </div>
