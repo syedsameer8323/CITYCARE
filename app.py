@@ -29,17 +29,17 @@ import requests as http_requests
 #     nltk.download('punkt')
 import logging
 logging.basicConfig(level=logging.DEBUG)
-# ── App setup ──────────────────────────────────────────────────────
-app = Flask(__name__)
-# app.secret_key = "citycare_secret_2024"
-app.secret_key = os.environ.get("SECRET_KEY", "citycare_secret_2024")
-app.config['UPLOAD_FOLDER'] = './static/pictures/'
+# # ── App setup ──────────────────────────────────────────────────────
+# app = Flask(__name__)
+# # app.secret_key = "citycare_secret_2024"
+# app.secret_key = os.environ.get("SECRET_KEY", "citycare_secret_2024")
+# app.config['UPLOAD_FOLDER'] = './static/pictures/'
 
-# ── Email config ───────────────────────────────────────────────────
-EMAIL_ENABLED  = True
-EMAIL_SENDER   = "syedsameer8323@gmail.com"
-EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
-# EMAIL_PASSWORD = "bqrm obpn jvva skgf"   # Gmail App Password
+# # ── Email config ───────────────────────────────────────────────────
+# EMAIL_ENABLED  = True
+# EMAIL_SENDER   = "syedsameer8323@gmail.com"
+# EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
+# # EMAIL_PASSWORD = "bqrm obpn jvva skgf"   # Gmail App Password
 
 # ── Anthropic AI config ────────────────────────────────────────────
 # ANTHROPIC_API_KEY = "sk-ant-your-key-here"
@@ -90,6 +90,38 @@ SEVERITY_MAP  = {'Critical': 10, 'High': 7, 'Medium': 4, 'Low': 1}
 #     return con, con.cursor(dictionary=True)
 
 
+# # ── App setup ──────────────────────────────────────────────────────
+# app = Flask(__name__)
+# app.secret_key = "citycare_secret_2024"
+# app.config['UPLOAD_FOLDER'] = './static/pictures/'
+
+
+
+# # for localhost testing.
+
+# # ── Email config ───────────────────────────────────────────────────
+# EMAIL_ENABLED  = True
+# EMAIL_SENDER   = "syedsameer8323@gmail.com"
+# EMAIL_PASSWORD = "bqrm obpn jvva skgf"   # Gmail App Password
+
+# def database():
+#     try:
+#         con = mysql.connector.connect(
+#             user="root",
+#             password="root",
+#             host="localhost",
+#             port=3306,   # 👈 keep it INT, not string
+#             database="waste_management_system"
+#         )
+#         return con, con.cursor(dictionary=True)
+
+#     except Exception as e:
+#         print("DATABASE ERROR:", e)
+#         raise e
+
+
+#just db + local host testing.
+
 # def database():
 #     import mysql.connector
 #     con = mysql.connector.connect(
@@ -102,8 +134,26 @@ SEVERITY_MAP  = {'Critical': 10, 'High': 7, 'Medium': 4, 'Low': 1}
 #     return con, con.cursor(dictionary=True)
 
 
+
+
+
+
+# for railaway db testing.
+
+
+
 import os
 import mysql.connector
+
+app = Flask(__name__)
+# app.secret_key = "citycare_secret_2024"
+app.secret_key = os.environ.get("SECRET_KEY", "citycare_secret_2024")
+app.config['UPLOAD_FOLDER'] = './static/pictures/'
+
+# ── Email config ───────────────────────────────────────────────────
+EMAIL_ENABLED  = True
+EMAIL_SENDER   = "syedsameer8323@gmail.com"
+EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
 
 def database():
     print("DB HOST:", os.environ.get("DB_HOST"))
@@ -113,13 +163,21 @@ def database():
             user=os.environ.get("DB_USER"),
             password=os.environ.get("DB_PASSWORD"),
             database=os.environ.get("DB_NAME"),
-            port=int(os.environ.get("DB_PORT", 3306))
+            port=int(os.environ.get("DB_PORT"))
         )
         return con, con.cursor(dictionary=True)
 
     except Exception as e:
         print("DATABASE ERROR:", e)
         raise e   # 👈 VERY IMPORTANT
+
+
+
+
+
+
+
+
 
 
 # import os
@@ -162,7 +220,11 @@ def database():
 #         port=int(os.environ.get("DB_PORT"))
 #     )
 #     return con, con.cursor(dictionary=True)
-
+@app.route('/test-db')
+def test_db():
+    con, cur = database()
+    cur.execute("SELECT 1")
+    return "Railway DB Connected Successfully"
 
 # ══════════════════════════════════════════════════════════════════
 #  HELPERS
@@ -2117,9 +2179,9 @@ def rate_staff(complaint_id):
     return redirect(url_for('userhome'))
 
 # if __name__ == '__main__':
+#     app.run(host="localhost", debug=True, port=5078)
+#     # app.run(host="localhost", port=5678, debug=True)
 #     # app.run()
-#     app.run(host="localhost", port=5678, debug=True)
-#     # app.run(debug=True, port=5078)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
