@@ -7,6 +7,7 @@ import mysql.connector
 import os
 import uuid
 
+from werkzeug import local
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -19,8 +20,13 @@ from email.mime.multipart import MIMEMultipart
 
 import requests as http_requests
 
-# from sklearn.feature_extraction.text import TfidfVectorizer
-# from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+
+import os
+import mysql.connector
+from flask import Flask
 
 # import nltk
 # try:
@@ -41,9 +47,13 @@ logging.basicConfig(level=logging.DEBUG)
 # EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
 # # EMAIL_PASSWORD = "bqrm obpn jvva skgf"   # Gmail App Password
 
-# ── Anthropic AI config ────────────────────────────────────────────
-# ANTHROPIC_API_KEY = "sk-ant-your-key-here"
-# AI_ENABLED        = False
+# ── Groq AI config ────────────────────────────────────────────
+from dotenv import load_dotenv
+load_dotenv()
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+AI_ENABLED = True
+
 
 # ── Staff Designation Hierarchy (lowest index = lowest rank) ──────
 DESIGNATION_HIERARCHY = [
@@ -90,14 +100,32 @@ SEVERITY_MAP  = {'Critical': 10, 'High': 7, 'Medium': 4, 'Low': 1}
 #     return con, con.cursor(dictionary=True)
 
 
-# # ── App setup ──────────────────────────────────────────────────────
+
+
+
+
+
+# for localhost testing..
+
+
+
+
+
+
+# ── App setup ──────────────────────────────────────────────────────
 # app = Flask(__name__)
 # app.secret_key = "citycare_secret_2024"
 # app.config['UPLOAD_FOLDER'] = './static/pictures/'
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "pictures")
 
+# app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    
 
-# # for localhost testing.
+# # print("UPLOAD PATH:", app.config['UPLOAD_FOLDER'])
+# # 🔥 Ensure folder exists
+# os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # # ── Email config ───────────────────────────────────────────────────
 # EMAIL_ENABLED  = True
@@ -118,6 +146,9 @@ SEVERITY_MAP  = {'Critical': 10, 'High': 7, 'Medium': 4, 'Low': 1}
 #     except Exception as e:
 #         print("DATABASE ERROR:", e)
 #         raise e
+
+
+
 
 
 #just db + local host testing.
@@ -142,21 +173,35 @@ SEVERITY_MAP  = {'Critical': 10, 'High': 7, 'Medium': 4, 'Low': 1}
 
 
 
-import os
-import mysql.connector
+# ── App Setup ─────────────────────────────────────────────
 
 app = Flask(__name__)
-# app.secret_key = "citycare_secret_2024"
-app.secret_key = os.environ.get("SECRET_KEY", "citycare_secret_2024")
-app.config['UPLOAD_FOLDER'] = './static/pictures/'
 
-# ── Email config ───────────────────────────────────────────────────
-EMAIL_ENABLED  = True
-EMAIL_SENDER   = "syedsameer8323@gmail.com"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "pictures")
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+app.secret_key = os.environ.get(
+    "SECRET_KEY",
+    "citycare_secret_2024"
+)
+
+# ── Email Config ──────────────────────────────────────────
+
+EMAIL_ENABLED = True
+
+EMAIL_SENDER = "syedsameer8323@gmail.com"
+
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
 
+
+# ── Database Connection ───────────────────────────────────
+
 def database():
-    print("DB HOST:", os.environ.get("DB_HOST"))
     try:
         con = mysql.connector.connect(
             host=os.environ.get("DB_HOST"),
@@ -165,13 +210,34 @@ def database():
             database=os.environ.get("DB_NAME"),
             port=int(os.environ.get("DB_PORT"))
         )
+
         return con, con.cursor(dictionary=True)
 
     except Exception as e:
         print("DATABASE ERROR:", e)
-        raise e   # 👈 VERY IMPORTANT
+        raise e
 
 
+
+
+
+#render +local db testing.
+
+# def database():
+#     try:
+#         con = mysql.connector.connect(
+#             host=os.environ.get("DB_HOST", "127.0.0.1"),
+#             user=os.environ.get("DB_USER", "root"),
+#             password=os.environ.get("DB_PASSWORD", "root"),
+#             database=os.environ.get("DB_NAME", "waste_management_system"),
+#             port=int(os.environ.get("DB_PORT", 3306))
+#         )
+#         return con, con.cursor(dictionary=True)
+
+#     except Exception as e:
+#         print("DATABASE ERROR:", e)
+#         raise e
+    
 
 
 
@@ -614,34 +680,116 @@ Guidelines:
 - When relevant, remind users they can submit a complaint directly on CityCare
 - If asked unrelated questions, politely redirect to waste/civic topics
 - Never make up specific local bylaws or government schemes without being sure"""
-
-def ask_claude(user_message, conversation_history):
-    if not AI_ENABLED:
-        return None
+def is_complaint_intent(text):
+    keywords = [
+        "complaint", "issue", "problem",
+        "not working", "overflow", "leak",
+        "damage", "broken", "garbage"
+    ]
+    return any(k in text.lower() for k in keywords)
+def ask_groq(user_message, history=[]):
     try:
-        messages = conversation_history + [{"role": "user", "content": user_message}]
+        messages = history + [
+            {"role": "user", "content": user_message}
+        ]
+
         response = http_requests.post(
-            "https://api.anthropic.com/v1/messages",
+            "https://api.groq.com/openai/v1/chat/completions",
             headers={
-                "x-api-key": ANTHROPIC_API_KEY,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json"
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json"
             },
             json={
-                "model": "claude-haiku-4-5-20251001",
-                "max_tokens": 600,
-                "system": SYSTEM_PROMPT,
-                "messages": messages
+                "model": "llama-3.1-8b-instant",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are CityCare AI Assistant. You ONLY answer questions related to waste management, recycling, complaints, and how to use the CityCare platform. If a user asks how to file a complaint, explain steps within the CityCare app like going to Dashboard → New Complaint. Do NOT give general global advice or mention US agencies."
+                    }
+                ] + messages,
+                "temperature": 0.5
             },
-            timeout=20
+            timeout=10
         )
+
         if response.status_code == 200:
-            return response.json()["content"][0]["text"]
-        return None
-    except Exception as e:
-        print(f"[Claude exception] {e}")
+            return response.json()["choices"][0]["message"]["content"]
+
+        print("Groq Error:", response.text)
         return None
 
+    except Exception as e:
+        print("Groq Exception:", e)
+        return None
+    
+
+def analyze_with_ai(message):
+    try:
+        prompt = f"""
+You are CityCare AI.
+
+Extract structured complaint details from:
+"{message}"
+
+Choose category EXACTLY from:
+- Organic
+- Hazardous
+- Liquid
+- Domestic
+- Mixed
+- Garbage Overflow
+- Uncollected Waste
+- Streetlight Issue
+- Water Leakage
+- Road Damage
+- Drainage Issue
+- Public Toilet Issue
+- Illegal Dumping
+- Dead Animal
+
+Rules:
+- pothole → Road Damage
+- garbage → Garbage Overflow
+- drainage/sewage → Drainage Issue
+- light issue → Streetlight Issue
+
+Return ONLY JSON:
+{{
+  "category": "",
+  "severity": "Low/Medium/High/Critical",
+  "location": "",
+  "description": ""
+}}
+
+Description must be clear and professional (2 lines).
+"""
+
+        response = http_requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "llama-3.1-8b-instant",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.3
+            }
+        )
+
+        if response.status_code == 200:
+            import json
+            content = response.json()["choices"][0]["message"]["content"]
+
+            # 🔥 CLEAN JSON (important fix)
+            content = content.strip().replace("```json", "").replace("```", "")
+
+            return json.loads(content)
+
+    except Exception as e:
+        print("AI Parse Error:", e)
+
+    return None
 # ══════════════════════════════════════════════════════════════════
 #  PERFORMANCE SCORE
 # ══════════════════════════════════════════════════════════════════
@@ -1549,36 +1697,84 @@ def complaint_store():
     uid = session.get('uid')
     if not uid:
         return redirect('/user')
+
     con, cur = database()
+
+    # 🔹 Get user details
     cur.execute("SELECT * FROM users WHERE userid=%s", (uid,))
     user_row = cur.fetchone()
-    name, mno = user_row['user_name'], user_row['phno']
-    category   = request.form['type']
-    location   = request.form['area'].strip().title()
-    addr       = request.form['address']
-    severity   = request.form.get('severity', 'Medium')
-    file       = request.files['pic']
-    filename   = secure_filename(file.filename)
-    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    name = user_row['user_name']
+    mno  = user_row['phno']
+
+    # 🔹 Form data
+    category = request.form.get('type')
+    location = request.form.get('area', '').strip().title()
+    addr     = request.form.get('address')
+    severity = request.form.get('severity', 'Medium')
+
+    # 🔥 IMAGE HANDLING (FIXED)
+    file = request.files.get('pic')
+    filename = None
+
+    if file and file.filename != "":
+        # ✅ User uploaded new file from form
+        filename = secure_filename(file.filename)
+
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        print("Saving file to:", filepath)
+
+        file.save(filepath)
+
+    else:
+        # ✅ Chatbot image fallback
+        filename = request.form.get('uploaded_image')
+        print("Using chatbot image:", filename)
+
+    # 🔹 Severity + priority
     sev_score  = SEVERITY_MAP.get(severity, 4)
     created_at = datetime.now()
-    priority   = compute_priority(severity, created_at, location, con, cur)
+
+    priority = compute_priority(
+        severity, created_at, location, con, cur
+    )
+
+    # 🔹 Insert into DB
     cur.execute(
         """INSERT INTO complaints
-           (user_name,userid,phone_number,category,location,adddress,
-            waste_image,status,severity,severity_score,priority_score,
-            assigned_staff,staff_id,created_at)
+           (user_name, userid, phone_number, category, location, adddress,
+            waste_image, status, severity, severity_score, priority_score,
+            assigned_staff, staff_id, created_at)
            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-        (name, uid, mno, category, location, addr, filename,
-         'pending', severity, sev_score, priority, None, None, created_at)
+        (
+            name,
+            uid,
+            mno,
+            category,
+            location,
+            addr,
+            filename,   # 🔥 correct image
+            'pending',
+            severity,
+            sev_score,
+            priority,
+            None,
+            None,
+            created_at
+        )
     )
+
     new_cid = cur.lastrowid
+
     con.commit()
     con.close()
-    # Smart auto-assign after insert
-    smart_assign_complaint(new_cid)
-    return render_template("create_complaint.html", msg="Complaint submitted successfully!")
 
+    # 🔹 Auto assign staff
+    smart_assign_complaint(new_cid)
+
+    return render_template(
+        "create_complaint.html",
+        msg=f"Complaint submitted successfully! ID: {new_cid}"
+    )
 @app.route("/view_complaints_user")
 def view_complaints_user():
     uid = session.get('uid')
@@ -1617,9 +1813,13 @@ def complaint_update2():
     location = request.form['location']
     address  = request.form['address']
     severity = request.form.get('severity', 'Medium')
-    file     = request.files['pic']
+    file = request.files['pic']
+
     filename = secure_filename(file.filename)
-    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+    file.save(filepath)
     sev_score = SEVERITY_MAP.get(severity, 4)
     con, cur  = database()
     cur.execute("SELECT created_at FROM complaints WHERE complaint_id=%s", (cid,))
@@ -1704,18 +1904,18 @@ def submit_feedback2():
 def chatbot():
     return render_template("chatbot2.html", ai_enabled=AI_ENABLED)
 
-@app.route('/ask', methods=['POST'])
-def ask_question():
-    data = request.json
-    message = data.get('question', '').strip()
+# @app.route('/ask', methods=['POST'])
+# def ask_question():
+#     data = request.json
+#     message = data.get('question', '').strip()
 
-    if not message:
-        return jsonify({"answer": "Please ask a valid question.", "source": "error"})
+#     if not message:
+#         return jsonify({"answer": "Please ask a valid question.", "source": "error"})
 
-    return jsonify({
-        "answer": "Chatbot temporarily disabled.",
-        "source": "static"
-    })
+#     return jsonify({
+#         "answer": "Chatbot temporarily disabled.",
+#         "source": "static"
+#     })
 
 
 # @app.route('/ask', methods=['POST'])
@@ -1731,31 +1931,184 @@ def ask_question():
 #             return jsonify({"answer": ai_answer, "source": "ai"})
 #     return jsonify({"answer": find_best_match(message.lower()), "source": "db"})
 
-# _qa_data = None
+_qa_data = None
 
-# def fetch_data():
-#     global _qa_data
-#     con, cur = database()
-#     cur.execute("SELECT question, answer FROM questions")
-#     _qa_data = [(r['question'], r['answer']) for r in cur.fetchall()]
-#     con.close()
+def fetch_data():
+    global _qa_data
+    con, cur = database()
+    cur.execute("SELECT question, answer FROM questions")
+    _qa_data = [(r['question'], r['answer']) for r in cur.fetchall()]
+    con.close()
 
-# def find_best_match(user_question):
-#     global _qa_data
-#     if _qa_data is None:
-#         fetch_data()
-#     if not _qa_data:
-#         return "No knowledge base entries yet."
-#     questions  = [r[0] for r in _qa_data]
-#     answers    = [r[1] for r in _qa_data]
-#     vectorizer = TfidfVectorizer().fit_transform(questions + [user_question])
-#     vectors    = vectorizer.toarray()
-#     sim        = cosine_similarity([vectors[-1]], vectors[:-1])
-#     idx        = sim.argmax()
-#     if sim[0][idx] > 0.5:
-#         return answers[idx]
-#     return ("I'm not sure about that. Try asking about waste categories, "
-#             "recycling, composting, or how to use CityCare.")
+def find_best_match(user_question):
+    global _qa_data
+    if _qa_data is None:
+        fetch_data()
+    if not _qa_data:
+        return "No knowledge base entries yet."
+    questions  = [r[0] for r in _qa_data]
+    answers    = [r[1] for r in _qa_data]
+    vectorizer = TfidfVectorizer().fit_transform(questions + [user_question])
+    vectors    = vectorizer.toarray()
+    sim        = cosine_similarity([vectors[-1]], vectors[:-1])
+    idx        = sim.argmax()
+    if sim[0][idx] > 0.5:
+        return answers[idx]
+    return ("I'm not sure about that. Try asking about waste categories, "
+            "recycling, composting, or how to use CityCare.")
+
+@app.route('/ask', methods=['POST'])
+def ask_question():
+    data = request.json
+    message = data.get('question', '').strip()
+    history = data.get('history', [])
+
+    if not message:
+        return jsonify({"answer": "Please ask a valid question.", "source": "error"})
+     # ✅ Complaint detection
+    if is_complaint_intent(message):
+        structured = analyze_with_ai(message)
+
+        if structured:
+            return jsonify({
+                "answer": "I can file this complaint for you. Please confirm.",
+                "intent": "complaint",
+                "data": structured   # ✅ IMPORTANT KEY NAME
+            })
+    # 🚀 Use Groq AI
+    if AI_ENABLED:
+        ai_answer = ask_groq(message, history[-10:])
+        if ai_answer:
+            return jsonify({"answer": ai_answer, "source": "ai"})
+    
+    # 🔁 fallback to DB
+    try:
+        return jsonify({
+            "answer": find_best_match(message.lower()),
+            "source": "db"
+        })
+    except Exception as e:
+        print("Fallback Error:", e)
+        return jsonify({
+            "answer": "AI temporarily unavailable. Please try again later.",
+            "source": "error"
+        })
+    
+
+
+
+
+
+
+#auto submit complint
+
+
+
+
+@app.route('/auto_submit_complaint', methods=['POST'])
+def auto_submit():
+    data = request.json
+
+    con, cur = database()
+
+    cur.execute("""
+        INSERT INTO complaints (category, location, description, severity)
+        VALUES (%s, %s, %s, %s)
+    """, (
+        data.get("category"),
+        data.get("location"),
+        data.get("description"),
+        data.get("severity")
+    ))
+
+    con.commit()
+    con.close()
+
+    return jsonify({"status": "success"})
+LAST_UPLOADED_IMAGE = None
+
+# @app.route('/upload_chat_file', methods=['POST'])
+# def upload_chat_file():
+#     global LAST_UPLOADED_IMAGE
+
+#     file = request.files['file']
+#     filename = secure_filename(file.filename)
+
+#     path = os.path.join("static/pictures", filename)
+#     file.save(path)
+
+#     LAST_UPLOADED_IMAGE = filename
+
+#     return jsonify({"file": filename})
+
+# @app.route('/upload_chat_file', methods=['POST'])
+# def upload_chat_file():
+#     file = request.files.get('file')
+
+#     if not file:
+#         return jsonify({"error": "No file"}), 400
+
+#     filename = str(uuid.uuid4()) + "_" + secure_filename(file.filename)
+#     path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+#     file.save(path)
+
+#     return jsonify({"file": filename})
+@app.route('/upload_chat_file', methods=['POST'])
+def upload_chat_file():
+    file = request.files.get('file')
+
+    if not file:
+        return jsonify({"error": "No file"}), 400
+
+    filename = str(uuid.uuid4()) + "_" + secure_filename(file.filename)
+
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    print("Saving file to:", filepath)
+    file.save(filepath)
+    print("Saving file to:", filepath)
+
+    return jsonify({"file": filename})
+
+@app.route('/analyze_complaint', methods=['POST'])
+def analyze_complaint():
+    data = request.json
+    message = data.get("message")
+
+    prompt = f"""
+You are CityCare AI.
+
+Extract and generate structured complaint details.
+
+User input:
+"{message}"
+
+Return ONLY JSON:
+{{
+  "category": "",
+  "severity": "",
+  "location": "",
+  "description": ""
+}}
+Rules:
+- Description should be clear, detailed, and professional (2–3 lines)
+- Location must be specific
+- Severity based on urgency and impact
+Categories must match:
+Garbage Overflow, Drainage Issue, Water Leakage, Streetlight Issue, Road Damage
+
+Severity:
+Low, Medium, High, Critical
+"""
+
+    ai_response = ask_groq(prompt)
+
+    try:
+        import json
+        parsed = json.loads(ai_response)
+        return jsonify(parsed)
+    except:
+        return jsonify({})   
 
 # ══════════════════════════════════════════════════════════════════
 #  STAFF AUTH
@@ -2179,9 +2532,12 @@ def rate_staff(complaint_id):
     return redirect(url_for('userhome'))
 
 # if __name__ == '__main__':
-#     app.run(host="localhost", debug=True, port=5078)
+#     app.run(host="localhost",debug=True, port=5078)
 #     # app.run(host="localhost", port=5678, debug=True)
 #     # app.run()
+
+
+# ── Run App ───────────────────────────────────────────────
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))

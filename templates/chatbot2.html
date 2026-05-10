@@ -404,7 +404,7 @@ body{font-family:var(--font-b);background:#eef5f0;color:var(--text);min-height:1
           </div>
           <div class="chat-header-info">
             <h4>CityCare Assistant</h4>
-            <p>Powered by Claude AI · Waste management &amp; civic help</p>
+            <p>Powered by AI · Smart civic assistance for CityCare</p>
           </div>
           <div class="status-pill">
             <span class="status-dot"></span>
@@ -419,13 +419,14 @@ body{font-family:var(--font-b);background:#eef5f0;color:var(--text);min-height:1
         <div class="chat-input-wrap">
           <div class="chat-input-inner">
             <textarea id="userInput" rows="1"
-              placeholder="Ask about waste disposal, complaints, recycling…"
+              placeholder="Ask anything about complaints, waste management, recycling, or how to use CityCare..."
               onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+            <input type="file" id="chat_file" accept="image/*">
             <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">
               <i class="fas fa-paper-plane"></i>
             </button>
           </div>
-          <div class="input-hint">Press <kbd style="background:#eef5f0;padding:1px 5px;border-radius:4px;font-size:10px;">Enter</kbd> to send · <kbd style="background:#eef5f0;padding:1px 5px;border-radius:4px;font-size:10px;">Shift+Enter</kbd> for new line</div>
+          <!-- <div class="input-hint">Press <kbd style="background:#eef5f0;padding:1px 5px;border-radius:4px;font-size:10px;">Enter</kbd> to send · <kbd style="background:#eef5f0;padding:1px 5px;border-radius:4px;font-size:10px;">Shift+Enter</kbd> for new line</div> -->
         </div>
 
       </div>
@@ -437,8 +438,8 @@ body{font-family:var(--font-b);background:#eef5f0;color:var(--text);min-height:1
         <div class="ai-hero-card">
           <div class="ai-hero-icon"><i class="fas fa-robot"></i></div>
           <h4>CityCare AI Assistant</h4>
-          <p>Powered by Claude — get instant, intelligent answers about waste management, recycling, and how to use CityCare.</p>
-          <span class="ai-hero-badge">Claude AI · Active</span>
+          <p>Powered by advanced AI models — providing intelligent, real-time assistance for waste management, complaint handling, and civic awareness in CityCare.</p>
+          <span class="ai-hero-badge">Smart AI · Live</span>
         </div>
 
         <!-- Quick Prompts -->
@@ -570,15 +571,26 @@ function addMessage(text, role){
   const bubble = document.createElement('div');
   bubble.className = 'msg-bubble';
 
-  // Render basic markdown: bold, bullet lists, line breaks
-  let html = text
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
-    .replace(/^\*\s(.+)$/gm,'<li>$1</li>')
-    .replace(/^-\s(.+)$/gm,'<li>$1</li>')
-    .replace(/^\d+\.\s(.+)$/gm,'<li>$1</li>')
-    .replace(/(<li>.*<\/li>)/gs, s => `<ul style="margin:6px 0 6px 14px;padding:0;">${s}</ul>`)
-    .replace(/\n/g,'<br>');
+  let html;
+
+  // 🚀 IMPORTANT: allow HTML ONLY for bot messages
+  if (role === 'bot') {
+    html = text
+      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+      .replace(/^\*\s(.+)$/gm,'<li>$1</li>')
+      .replace(/^-\s(.+)$/gm,'<li>$1</li>')
+      .replace(/^\d+\.\s(.+)$/gm,'<li>$1</li>')
+      .replace(/(<li>.*<\/li>)/gs, s => `<ul style="margin:6px 0 6px 14px;padding:0;">${s}</ul>`)
+      .replace(/\n/g,'<br>');
+  } else {
+    // 🔒 escape user input for safety
+    html = text
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/\n/g,'<br>');
+  }
+
   bubble.innerHTML = html;
 
   const meta = document.createElement('div');
@@ -590,6 +602,7 @@ function addMessage(text, role){
   row.appendChild(avatar);
   row.appendChild(body);
   msgs.appendChild(row);
+
   scrollToBottom();
 }
 
@@ -631,80 +644,133 @@ function removeTyping(){
 /* ── SEND MESSAGE ────────────────────────────────────────────── */
 async function sendMessage(){
   if(isTyping) return;
+
   const input = document.getElementById('userInput');
   const text  = input.value.trim();
-  if(!text) return;
+  const fileInput = document.getElementById("chat_file");
+  const file = fileInput ? fileInput.files[0] : null;
+
+  if(!text && !file) return;
 
   input.value = '';
   input.style.height = 'auto';
   setButtonState(true);
 
-  addMessage(text, 'user');
-  conversationHistory.push({role:'user', content: text});
+  if(text){
+    addMessage(text, 'user');
+    conversationHistory.push({role:'user', content: text});
+  }
 
   showTyping();
   isTyping = true;
 
   try{
-    // Try the Flask /ask route first (server-side Claude call)
+
+    // 🔥 STEP 1: Upload file FIRST
+    let uploadedFileName = null;
+
+    if (file) {
+        let formData = new FormData();
+        formData.append("file", file);
+
+        const uploadRes = await fetch("/upload_chat_file", {
+            method: "POST",
+            body: formData
+        });
+
+        const uploadData = await uploadRes.json();
+        uploadedFileName = uploadData.file;
+
+        fileInput.value = ""; // clear after upload
+    }
+
+    // 🔥 STEP 2: Ask backend
     const res = await fetch('/ask', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         question: text,
-        history:  conversationHistory.slice(-10)
+        history: conversationHistory.slice(-10),
+        image: uploadedFileName   // 🔥 IMPORTANT
       })
     });
 
     if(!res.ok) throw new Error('Server error');
+
     const data = await res.json();
+
+    // 🚀 HANDLE COMPLAINT
+    if (data.intent === "complaint") {
+
+        const d = data.auto_fill || data.data;
+
+        // 🔥 attach image
+        if (uploadedFileName) {
+            d.image = uploadedFileName;
+        }
+
+        const encoded = encodeURIComponent(JSON.stringify(d));
+
+        let preview = `
+        📋 <b>Complaint Preview</b><br>
+        <b>Category:</b> ${d.category}<br>
+        <b>Location:</b> ${d.location}<br>
+        <b>Severity:</b> ${d.severity}<br>
+        ${d.image ? `<br><img src="/static/pictures/${d.image}" width="150">` : ""}
+
+        <br><br>
+        <button onclick="confirmComplaint('${encoded}')">
+            ✅ Confirm
+        </button>
+        `;
+
+        removeTyping();
+        addMessage(preview, "bot");
+
+        isTyping = false;
+        setButtonState(false);
+        return;
+    }
+
     removeTyping();
 
-    const answer = data.answer || "Sorry, I couldn't get a response. Please try again.";
+    const answer = data.answer || "Sorry, I couldn't get a response.";
     addMessage(answer, 'bot');
-    conversationHistory.push({role:'assistant', content: answer});
 
   } catch(err){
-    // Fallback: call Anthropic API directly from browser
-    // NOTE: For production, keep your API key on the server (Flask /ask route).
-    // This fallback is for development/demo only.
-    try{
-      const apiRes = await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'x-api-key': window.CITYCARE_AI_KEY || '',
-          'anthropic-version':'2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:800,
-          system: SYSTEM_PROMPT,
-          messages: conversationHistory.slice(-10)
-        })
-      });
-
-      const apiData = await apiRes.json();
-      removeTyping();
-
-      if(apiData.content && apiData.content[0]){
-        const answer = apiData.content[0].text;
-        addMessage(answer, 'bot');
-        conversationHistory.push({role:'assistant', content: answer});
-      } else {
-        addMessage('Sorry, I encountered an error. Please try again.', 'bot');
-      }
-    } catch(e2){
-      removeTyping();
-      addMessage('Unable to connect. Please check your connection and try again.', 'bot');
-    }
+    removeTyping();
+    addMessage('Something went wrong. Try again.', 'bot');
   }
 
   isTyping = false;
   setButtonState(false);
 }
 
+function confirmComplaint(encodedData) {
+
+    const data = JSON.parse(decodeURIComponent(encodedData));
+
+    window.location.href =
+        "/create_complaint?data=" +
+        encodeURIComponent(JSON.stringify(data));
+}
+
+
+// #auto submit confirmComplaint
+
+
+// function confirmComplaint(data) {
+
+//     fetch("/auto_submit_complaint", {
+//         method: "POST",
+//         headers: {"Content-Type": "application/json"},
+//         body: JSON.stringify(data)
+//     })
+//     .then(res => res.json())
+//     .then(() => {
+//         addMessage("✅ Complaint submitted successfully!", "bot");
+//     });
+// }
 function sendPrompt(text){
   document.getElementById('userInput').value = text;
   sendMessage();
@@ -722,6 +788,8 @@ function setButtonState(disabled){
   btn.disabled = disabled;
   btn.querySelector('i').className = disabled ? 'fas fa-circle-notch fa-spin' : 'fas fa-paper-plane';
 }
+
+
 
 /* ── WELCOME MESSAGE ─────────────────────────────────────────── */
 function showWelcome(){

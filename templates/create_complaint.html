@@ -141,6 +141,26 @@ body{font-family:var(--font-body);background:#f0f6f2;color:var(--cc-text);}
       <div class="col-lg-8">
         <div class="form-card">
           <div class="form-card-header">
+            <!-- 🤖 AI ASSIST -->
+            <!-- <div class="ai-assist-box" style="margin-bottom:25px;">
+              <label style="font-weight:600;font-size:13px;color:#2d6a4f;">
+                🤖 Describe your issue (AI will auto-fill form)
+              </label>
+
+              <div style="display:flex; gap:10px; margin-top:8px;">
+                <input type="text" id="ai_input"
+                  placeholder="e.g. Garbage overflowing near Charminar, very bad smell"
+                  style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;">
+
+                <button type="button" onclick="analyzeComplaint()"
+                  style="background:#1a4d2e;color:#fff;border:none;padding:10px 16px;border-radius:8px;">
+                  Analyze
+                </button>
+              </div>
+
+              <small style="color:#5a7a65;">Optional: You can still fill manually below</small>
+            </div> -->
+
             <h3>Complaint Details</h3>
             <p>Fill in all fields accurately. Your complaint will be prioritised based on severity and location.</p>
           </div>
@@ -153,7 +173,7 @@ body{font-family:var(--font-body);background:#f0f6f2;color:var(--cc-text);}
               <!-- CATEGORY -->
               <div class="cc-field">
                 <label>Waste Category</label>
-                <select name="type" required>
+                <select name="type" required id="type">
                   <option value="Organic">Organic Waste</option>
                   <option value="Hazardous">Hazardous / Chemical Waste</option>
                   <option value="Liquid">Liquid Waste</option>
@@ -177,7 +197,7 @@ body{font-family:var(--font-body);background:#f0f6f2;color:var(--cc-text);}
               <label>Location / Area</label>
 
               <!-- INPUT WITH SUGGESTIONS -->
-              <input list="area_list" name="area" placeholder="Select or type your area" required>
+              <input list="area_list" name="area" placeholder="Select or type your area" required id="area">
 
               <!-- SUGGESTION LIST -->
               <datalist id="area_list">
@@ -225,7 +245,7 @@ body{font-family:var(--font-body);background:#f0f6f2;color:var(--cc-text);}
               <label>Full Address / Description</label>
               <textarea name="address"
                 placeholder="Describe the exact location and nature of the waste issue..."
-                required></textarea>
+                required id="address"></textarea>
             </div>
 
             <!-- UPLOAD -->
@@ -314,5 +334,95 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
+<script>
+function analyzeComplaint() {
+    let text = document.getElementById("ai_input").value;
+
+    if (!text) {
+        alert("Please enter complaint description");
+        return;
+    }
+
+    fetch("/analyze_complaint", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: text })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("AI DATA:", data);
+
+        if (data.category)
+            document.getElementById("type").value = data.category;
+
+        if (data.location)
+            document.getElementById("area").value = data.location;
+
+        if (data.description)
+            document.getElementById("address").value = data.description;
+
+        if (data.severity) {
+            let radios = document.getElementsByName("severity");
+            radios.forEach(r => {
+                if (r.value.toLowerCase() === data.severity.toLowerCase()) {
+                    r.checked = true;
+                }
+            });
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("AI failed. Please try manually.");
+    });
+}
+</script>
+<script>
+const textarea = document.getElementById("address");
+
+textarea.addEventListener("input", function () {
+  this.style.height = "auto";
+  this.style.height = this.scrollHeight + "px";
+});
+</script>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const data = params.get("data");
+const image = params.get("image");
+if (data) {
+    const d = JSON.parse(data);
+
+    document.getElementById("type").value = d.category || "";
+    document.getElementById("area").value = d.location || "";
+    document.getElementById("address").value = d.description || "";
+
+    if (d.severity) {
+        document.querySelector(
+            `input[name="severity"][value="${d.severity}"]`
+        ).checked = true;
+    }
+
+    // 🔥 IMAGE PREVIEW + AUTO ATTACH
+    if (d.image) {
+    const preview = document.createElement("img");
+    preview.src = "/static/pictures/" + d.image;
+    preview.style.width = "200px";
+
+    document.querySelector(".upload-zone").appendChild(preview);
+
+    document.getElementById("pic-input").removeAttribute("required");
+
+    let hidden = document.createElement("input");
+    hidden.type = "hidden";
+    hidden.name = "uploaded_image";
+    hidden.value = d.image;
+
+    document.querySelector("form").appendChild(hidden);
+}
+}
+</script>
+
 </body>
 </html>
