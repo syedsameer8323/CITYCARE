@@ -681,12 +681,75 @@ Guidelines:
 - If asked unrelated questions, politely redirect to waste/civic topics
 - Never make up specific local bylaws or government schemes without being sure"""
 def is_complaint_intent(text):
-    keywords = [
-        "complaint", "issue", "problem",
-        "not working", "overflow", "leak",
-        "damage", "broken", "garbage"
+
+    text = text.lower().strip()
+
+    # ❌ Help / informational questions
+    help_phrases = [
+        "how to file",
+        "how can i file",
+        "how do i file",
+        "how to submit",
+        "how can i submit",
+        "how do i submit",
+        "how complaint works",
+        "what is complaint",
+        "how to raise complaint",
+        "how can i raise complaint",
+        "track complaint",
+        "check complaint status"
     ]
-    return any(k in text.lower() for k in keywords)
+
+    for phrase in help_phrases:
+        if phrase in text:
+            return False
+
+    # ✅ Actual civic complaint indicators
+    complaint_keywords = [
+
+        # waste
+        "garbage",
+        "overflow",
+        "waste",
+        "trash",
+        "dumping",
+        "bad smell",
+
+        # drainage
+        "drainage",
+        "drain",
+        "sewage",
+        "blocked drain",
+
+        # roads
+        "pothole",
+        "road damage",
+        "broken road",
+
+        # utilities
+        "streetlight",
+        "light not working",
+        "water leakage",
+        "leakage",
+
+        # hygiene
+        "dead animal",
+        "public toilet",
+
+        # issue words
+        "not working",
+        "broken",
+        "damage",
+        "problem",
+        "issue",
+
+        # explicit action
+        "file complaint",
+        "register complaint",
+        "submit complaint"
+    ]
+
+    return any(keyword in text for keyword in complaint_keywords)
 def ask_groq(user_message, history=[]):
     try:
         messages = history + [
